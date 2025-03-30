@@ -1,0 +1,84 @@
+/* Contenedor principal del formulario de login */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 20px;
+  background-color: #f5f5f5; /* Fondo suave */
+}
+
+h2 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #3f51b5; /* Color azul para el encabezado */
+}
+
+.login-form {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+mat-form-field {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+mat-label {
+  font-weight: bold;
+}
+
+/* Estilo para los botones de acción */
+.login-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Botón para iniciar sesión */
+button[mat-raised-button] {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+}
+
+/* Estilo para el botón de Google */
+button[mat-button] {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  background-color: #db4437; /* Color de fondo para Google */
+  color: white;
+  border-radius: 4px;
+  text-transform: none; /* Evitar que el texto se transforme en mayúsculas */
+}
+
+/* Hover para el botón de Google */
+button[mat-button]:hover {
+  background-color: #c1351d; /* Color cuando se pasa el mouse por encima */
+}
+
+/* Enlace para ir al registro */
+a {
+  text-align: center;
+  color: #3f51b5; /* Color del enlace */
+  font-size: 0.9rem;
+  text-decoration: none;
+  margin-top: 10px;
+}
+
+/* Hover para el enlace de registro */
+a:hover {
+  text-decoration: underline;
+}
+
+/* Estilo para los mensajes de error en los campos */
+mat-error {
+  color: red;
+  font-size: 0.875rem;
+  margin-top: 5px;
+}
