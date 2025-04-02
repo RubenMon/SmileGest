@@ -1,26 +1,26 @@
 <div class="register-container">
   <h2>Registro</h2>
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="fill">
       <mat-label>Correo electrónico</mat-label>
       <input matInput placeholder="Correo electrónico" type="email" formControlName="email">
       <mat-error *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
-        Email inválido
+        {{ form.get('email')?.hasError('required') ? 'El correo es obligatorio' : 'Correo inválido' }}
       </mat-error>
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="fill">
       <mat-label>Contraseña</mat-label>
       <input matInput placeholder="Contraseña" type="password" formControlName="password">
       <mat-error *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
-        La contraseña debe tener al menos 8 caracteres
+        {{ form.get('password')?.hasError('required') ? 'La contraseña es obligatoria' : 'Debe tener al menos 8 caracteres, una letra mayúsculas, una letra minúscula y un número' }}
       </mat-error>
     </mat-form-field>
 
-    <button mat-flat-button type="submit">
+    <button mat-flat-button type="submit" [disabled]="form.invalid">
       Registrarse
     </button>
 
-    <a href="/login">¿Ya tiene cuenta? Inicia Sesión</a>
+    <a href="/login">¿Ya tienes cuenta? Inicia sesión</a>
   </form>
 </div>
