@@ -1,15 +1,51 @@
+/* Contenedor del registro */
 .register-container {
-  max-width: 400px;
-  margin: auto;
-  padding: 20px;
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   text-align: center;
+  width: 350px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
+/* Título */
+.register-container h2 {
+  color: #0086b3; /* Azul médico */
+  margin-bottom: 1rem;
+}
+
+/* Campos de formulario */
 mat-form-field {
   width: 100%;
-  margin-bottom: 15px;
+  margin-bottom: 1rem;
 }
 
-button {
+/* Botón de registro */
+button[mat-flat-button] {
   width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  background-color: #0086b3;
+  color: white;
+}
+
+button[mat-flat-button]:hover {
+  background-color: #006f91;
+}
+
+/* Enlace de inicio de sesión */
+.register-container a {
+  display: block;
+  margin-top: 1rem;
+  color: #0086b3;
+  text-decoration: none;
+}
+
+.register-container a:hover {
+  text-decoration: underline;
 }

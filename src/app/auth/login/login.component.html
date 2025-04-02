@@ -4,22 +4,23 @@
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form">
     <mat-form-field appearance="fill">
       <mat-label>Correo electrónico</mat-label>
-      <input matInput type="email" formControlName="email" placeholder="Introduce tú correo electrónico" />
+      <input matInput type="email" formControlName="email" placeholder="Introduce tu correo electrónico" />
       <mat-error *ngIf="form.get('email')?.hasError('required')">Correo electrónico es requerido</mat-error>
+      <mat-error *ngIf="form.get('email')?.hasError('email')">Correo electrónico no es válido</mat-error>
     </mat-form-field>
 
     <mat-form-field appearance="fill">
-      <mat-label>Password</mat-label>
+      <mat-label>Contraseña</mat-label>
       <input matInput type="password" formControlName="password" placeholder="Introduce tu contraseña" />
-      <mat-error *ngIf="form.get('password')?.hasError('required')">Contraseña es requeridad</mat-error>
+      <mat-error *ngIf="form.get('password')?.hasError('required')">Contraseña es requerida</mat-error>
+      <mat-error *ngIf="form.get('password')?.hasError('minlength')">Debe tener al menos 8 caracteres</mat-error>
     </mat-form-field>
 
     <div class="login-actions">
       <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Inicia sesión</button>
-      <button mat-button color="accent" type="button" (click)="onClickGoogle()">inicia sesión con Google</button>
+      <button mat-button color="accent" type="button" (click)="onClickGoogle()">Inicia sesión con Google</button>
 
-      <!-- Botón para redirigir al registro -->
-      <a href="/register">¿No tiene cuenta? Registrate</a>
+      <a href="/register">¿No tienes cuenta? Regístrate</a>
     </div>
   </form>
 </div>

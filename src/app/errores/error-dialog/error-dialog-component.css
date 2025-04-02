@@ -1,0 +1,53 @@
+/* Estilo general del diálogo */
+p{
+  font-size: 22px;
+  color: #333;
+  padding: 20px;
+  text-align: center;
+  font-family: Arial, sans-serif;
+  line-height: 1.5;
+}
+
+/* Título del diálogo */
+h2[mat-dialog-title] {
+  font-size: 28px;
+  color: #0086b3;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* Estilo del botón de cerrar */
+mat-dialog-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-top: 20px;
+}
+
+button[mat-button] {
+  background-color: #0086b3;
+  color: white;
+  border-radius: 5px;
+  padding: 8px 20px;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+  width: auto;
+}
+
+button[mat-button]:hover {
+  background-color: #0086b3;
+}
+
+/* Estilo de contenedor de diálogo */
+.mat-dialog-container {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;  /* Asegura que el contenido se distribuya bien en el diálogo */
+}
