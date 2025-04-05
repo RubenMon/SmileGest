@@ -1,0 +1,58 @@
+<mat-dialog-content class="modal-event">
+  <form [formGroup]="form" class="modal-event__form">
+    <h3 class="modal-event__title">Crear un evento</h3>
+    <div class="modal-event__container">
+      <mat-form-field class="modal-event__field">
+        <mat-label>Escriba su evento...</mat-label>
+        <input formControlName="name" matInput placeholder="Ej: Entrevista" />
+      </mat-form-field>
+      <mat-form-field class="modal-event__field">
+        <mat-label>Tipo de evento</mat-label>
+        <mat-select formControlName="type">
+          <mat-option value="task">Tarea</mat-option>
+          <mat-option value="calendar">Reunión</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="modal-event__field">
+        <mat-label>Fecha</mat-label>
+        <input matInput [matDatepicker]="picker" formControlName="date" [min]="date">
+        <mat-hint>DD/MM/YYYY</mat-hint>
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+
+      <section class="modal-event__colors">
+        <div class="modal-event__color">
+          <mat-label>Color de fondo</mat-label>
+          <ngx-colors ngx-colors-trigger formControlName="background" [format]="'hex'"></ngx-colors>
+        </div>
+        <div class="modal-event__color">
+          <mat-label>Color</mat-label>
+          <ngx-colors ngx-colors-trigger formControlName="color" [format]="'hex'"></ngx-colors>
+        </div>
+      </section>
+    </div>
+  </form>
+  <section class="modal-event__preview">
+    <button class="modal-event__event" [matTooltip]="form.value.name" [ngStyle]="{'background-color': form.value.background, 'color': form.value.color}">
+      <span class="modal-event__icon-and-text">
+        @switch (form.value.type) {
+          @case ('task') {
+            <i class='bx bx-task'></i>
+          }
+          @case ('calendar') {
+            <i class='bx bx-calendar'></i>
+          }
+        }
+        <p>{{ form.value.name }}</p>
+      </span>
+    </button>
+  </section>
+</mat-dialog-content>
+
+<mat-dialog-actions class="modal-event__actions">
+  <div class="modal-event__buttons">
+    <button mat-button mat-dialog-close>Cancelar</button>
+    <button mat-button cdkFocusInitial color="primary" (click)="save()" [disabled]="form.invalid">Guardar</button>
+  </div>
+</mat-dialog-actions>

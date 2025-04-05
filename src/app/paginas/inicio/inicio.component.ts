@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../services/user/auth.service';
 import { Router } from '@angular/router';
+import { CalendarComponent } from "../calendar/calendar.component";
 
 @Component({
   selector: 'app-inicio',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CalendarComponent],
   templateUrl: './inicio.component.html',
   styleUrl: './inicio.component.css'
 })

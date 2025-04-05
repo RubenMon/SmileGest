@@ -1,4 +1,4 @@
-import { Usuario } from './../interfaces/usuario.interface';
+import { Usuario } from '../../interfaces/usuario.interface';
 import { Injectable } from "@angular/core";
 import { createUserWithEmailAndPassword, getAuth, GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut } from 'firebase/auth'
 

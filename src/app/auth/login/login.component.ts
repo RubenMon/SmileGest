@@ -5,7 +5,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../services/user/auth.service';
 import { Router } from '@angular/router';
 import { Usuario } from '../../interfaces/usuario.interface';
 import { ErrorDialogComponent } from '../../errores/error-dialog/error-dialog-component';

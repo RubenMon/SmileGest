@@ -1,0 +1,57 @@
+<section class="calendar">
+  <div class="calendar__add-button">
+    <button mat-button color="primary" (click)="openModal()">Agregar eventos</button>
+  </div>
+  
+  <div class="calendar__navigation">
+    <button mat-icon-button (click)="previousMonth()">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span class="calendar__current-month">{{ currentMonthAndYear }}</span>
+    <button mat-icon-button (click)="nextMonth()">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <div class="calendar__grid">
+    @for (name of nameDay; track $index) {
+      <span class="calendar__day-name">{{ name }}</span>
+    }
+    @for (day of calendarDays; let calendarIndex = $index; track $index) {
+      <div class="calendar__day" 
+           [ngClass]="{'calendar__day--current-month': day.currentMonth, 'calendar__day--current-day': day.currentDay}">
+        
+           <div class="calendar__day-header"
+        [ngStyle]="{'background-color': day.currentDay ? '#e8f5e9' : 'white'}">
+          <span class="calendar__day-number">{{ day.day }}</span>
+        </div>
+        <div class="calendar__events">
+          @for (event of day.events; let eventIndex = $index; track $index) {
+            <button class="calendar__event" 
+                    [matTooltip]="event.name" 
+                    [matMenuTriggerFor]="menu"
+                    [ngStyle]="{'background-color': event.background, 'color': event.color}">
+              <i class="calendar__event-icon" [ngClass]="'bx bx-' + event.type"></i>
+              <span class="calendar__event-name">{{ event.name }}</span>
+            </button>
+            <mat-menu #menu="matMenu">
+              <div class="calendar__event-menu">
+                <button class="calendar__event-menu-header" 
+                        [matTooltip]="event.name"
+                        [ngStyle]="{'background-color': event.background, 'color': event.color}">
+                  <i class="calendar__event-menu-icon" [ngClass]="'bx bx-' + event.type"></i>
+                  <span class="calendar__event-menu-name">{{ event.name }}</span>
+                </button>
+                <p class="calendar__event-menu-date">Fecha: {{ formatDate(event.date) }}</p>
+                <div class="calendar__event-menu-actions">
+                  <button mat-button color="primary" (click)="editModal(event)">Editar</button>
+                  <button mat-button color="warn" (click)="removeEvent(calendarIndex, eventIndex)">Eliminar</button>
+                </div>
+              </div>
+            </mat-menu>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</section>
