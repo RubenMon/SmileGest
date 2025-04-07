@@ -13,7 +13,16 @@
       <mat-label>Contraseña</mat-label>
       <input matInput placeholder="Contraseña" type="password" formControlName="password">
       <mat-error *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
-        {{ form.get('password')?.hasError('required') ? 'La contraseña es obligatoria' : 'Debe tener al menos 8 caracteres, una letra mayúsculas, una letra minúscula y un número' }}
+        {{ form.get('password')?.hasError('required') ? 'La contraseña es obligatoria' : 'Debe tener al menos 8 caracteres, una letra mayúscula, una minúscula y un número' }}
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Nuevo campo para DNI -->
+    <mat-form-field appearance="fill">
+      <mat-label>DNI</mat-label>
+      <input matInput placeholder="Ej.: 12345678A" formControlName="dni">
+      <mat-error *ngIf="form.get('dni')?.invalid && form.get('dni')?.touched">
+        {{ form.get('dni')?.hasError('required') ? 'El DNI es obligatorio' : 'Formato de DNI inválido' }}
       </mat-error>
     </mat-form-field>
 

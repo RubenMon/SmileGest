@@ -2,6 +2,9 @@ import { Injectable, inject, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ModalEventsComponent } from '../../modals/modal-events/modal-events.component';
 import { Events } from '../../interfaces/events.interface';
+import { Firestore, collection, addDoc, collectionData, doc, updateDoc, deleteDoc, query, where, getDocs } from '@angular/fire/firestore';
+import { Auth } from '@angular/fire/auth';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -9,11 +12,10 @@ import { Events } from '../../interfaces/events.interface';
 export class ModalEventsService {
   private modalData = signal<Events | null>(null);
   private dialog = inject(MatDialog);
-  private storageKey = 'calendarEvents';
+  private firestore = inject(Firestore);
+  private auth = inject(Auth);
 
-  constructor() {
-    this.loadEvents();
-  }
+  constructor() { }
 
   openModal(data?: Events): void {
     const dialogRef = this.dialog.open(ModalEventsComponent, {
@@ -24,7 +26,6 @@ export class ModalEventsService {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.setEvent(result);
-        this.saveEvents();
       }
     });
   }
@@ -33,39 +34,67 @@ export class ModalEventsService {
     return this.modalData();
   }
 
-  setEvent(event: Events) {
-    this.modalData.set(event);
-    this.saveEvents();
-  }
+  async setEvent(event: Events) {
+    const user = this.auth.currentUser;
+    if (!user) return;
 
-  getAllEvents(): Events[] {
-    return JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-  }
+    const eventsCollection = collection(this.firestore, 'events');
 
-  saveEvents() {
-    const allEvents = this.getAllEvents();
-    const updatedEvent = this.getEvent;
-    if (updatedEvent) {
-      const index = allEvents.findIndex(e => e.id === updatedEvent.id);
-      if (index !== -1) {
-        allEvents[index] = updatedEvent;
+    let assignedUserId = user.uid; // Por defecto, el usuario actual
+
+    const isAdmin = user.email === 'admin@clinicadental.com';
+
+    if (isAdmin && event.dni) {
+      // Si es admin y especifica un DNI, buscamos el usuario por DNI
+      const usersCollection = collection(this.firestore, 'users');
+      const q = query(usersCollection, where('dni', '==', event.dni));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0];
+        assignedUserId = userDoc.id;
       } else {
-        allEvents.push(updatedEvent);
+        console.error('No se encontró ningún usuario con ese DNI');
+        return; // Opcional: podrías lanzar un toast o alerta aquí
       }
     }
-    localStorage.setItem(this.storageKey, JSON.stringify(allEvents));
-  }
 
-  loadEvents() {
-    const events = this.getAllEvents();
-    if (events.length > 0) {
-      this.modalData.set(events[events.length - 1]);
+    if (!event.id) {
+      // Crear nuevo evento
+      const newEvent = {
+        ...event,
+        userId: assignedUserId,
+        createdAt: new Date()
+      };
+      await addDoc(eventsCollection, newEvent);
+    } else {
+      // Actualizar evento existente
+      const eventDoc = doc(this.firestore, `events/${event.id}`);
+      await updateDoc(eventDoc, { ...event, userId: assignedUserId });
     }
+
+    this.modalData.set(event);
   }
 
-  deleteEvent(eventId: string) {
-    let events = this.getAllEvents();
-    events = events.filter(e => e.id !== eventId);
-    localStorage.setItem(this.storageKey, JSON.stringify(events));
+  getAllEvents() {
+    const user = this.auth.currentUser!;
+
+    const eventsCollection = collection(this.firestore, 'events');
+
+    const isAdmin = user.email === 'admin@clinicadental.com';
+
+    const q = isAdmin
+      ? eventsCollection
+      : query(eventsCollection, where('userId', '==', user.uid));
+
+    return collectionData(q, { idField: 'id' }).pipe(
+      map(data => data as Events[])
+    );
+  }
+
+
+  async deleteEvent(eventId: string) {
+    const eventDoc = doc(this.firestore, `events/${eventId}`);
+    await deleteDoc(eventDoc);
   }
 }

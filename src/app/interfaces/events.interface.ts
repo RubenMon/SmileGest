@@ -4,5 +4,6 @@ export interface Events {
   id: string,
   date: Date,
   background: string,
-  color: string
+  color: string,
+  dni: string
 }

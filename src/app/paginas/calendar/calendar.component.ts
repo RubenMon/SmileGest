@@ -10,10 +10,11 @@ import { MatMenuModule } from '@angular/material/menu';
 import { DeleteComponent } from '../../modals/delete/delete.component';
 import { MatDialog } from '@angular/material/dialog';
 
+
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [MatButton, NgClass, MatTooltip, MatIcon, MatMenuModule, DatePipe, MatIconButton, NgStyle, DeleteComponent,],
+  imports: [MatButton, NgClass, MatTooltip, MatIcon, MatMenuModule, DatePipe, MatIconButton, NgStyle, DeleteComponent],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.scss']
 })
@@ -53,8 +54,12 @@ export class CalendarComponent implements OnInit {
   }
 
   private loadEvents() {
-    this.allEvents = this.modalSvc.getAllEvents();
+    this.modalSvc.getAllEvents().subscribe(events => {
+      this.allEvents = events;
+      this.createCalendarDays();
+    });
   }
+
 
   formatDate(date: Date | string): string {
     const parsedDate = new Date(date);
@@ -69,7 +74,6 @@ export class CalendarComponent implements OnInit {
 
   private updateEvent(item: Events) {
     this.allEvents = this.allEvents.filter(event => event.id !== item.id).concat(item);
-    this.modalSvc.saveEvents();
     this.createCalendarDays();
   }
 
@@ -123,6 +127,7 @@ export class CalendarComponent implements OnInit {
       this.addCalendarDay(this.date.getFullYear(), this.date.getMonth() + 1, i, false, false);
     }
   }
+
   private addCalendarDay(year: number, month: number, day: number, isCurrentDay: boolean, isCurrentMonth: boolean) {
     const date = new Date(year, month, day);
     this.calendarDays.push({
@@ -161,13 +166,24 @@ export class CalendarComponent implements OnInit {
     });
   }
 
-  createEvent(item: Events) {
+  // ✅ Cambio: Ahora recibe también el DNI del usuario
+  createEvent(item: Events, dni: string) {
+    if (!dni || dni.trim() === '') {
+      console.error('DNI del usuario es requerido para crear un evento.');
+      alert('Debe proporcionar un DNI válido para asignar el evento.');
+      return;
+    }
+
+    // ✅ Asignamos el DNI al evento
+    item.dni = dni;
+
     const existingEventIndex = this.allEvents.findIndex(event => event.id === item.id);
     if (existingEventIndex > -1) {
       this.allEvents[existingEventIndex] = item;
     } else {
       this.allEvents.push(item);
     }
+
     this.modalSvc.setEvent(item);
     this.createCalendarDays();
   }

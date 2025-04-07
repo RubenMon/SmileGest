@@ -1,36 +1,52 @@
 import { Usuario } from '../../interfaces/usuario.interface';
 import { Injectable } from "@angular/core";
-import { createUserWithEmailAndPassword, getAuth, GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut } from 'firebase/auth'
+import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut } from 'firebase/auth';
+import { Firestore, doc, setDoc } from '@angular/fire/firestore';
+import { inject } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
 })
+export class AuthService {
 
-export class AuthService{
+  private firestore = inject(Firestore);
 
   constructor(){}
 
-  getAuth(){
+  getAuth() {
     return getAuth();
   }
 
-  register( Usuario:Usuario){
-    return createUserWithEmailAndPassword(getAuth(), Usuario.email, Usuario.password);
+  async register(usuario: Usuario) {
+    // Registro del usuario en Firebase Authentication
+    const auth = getAuth();
+    const userCredential = await createUserWithEmailAndPassword(auth, usuario.email, usuario.password);
+
+    // Obtener el UID del usuario recién creado
+    const uid = userCredential.user.uid;
+
+    // Guardar información adicional en Firestore
+    // Puedes crear una colección "users" y guardar el DNI junto con otros datos
+    await setDoc(doc(this.firestore, 'users', uid), {
+      dni: usuario.dni,
+    });
+
+    return userCredential;
   }
 
-  login(Usuario:Usuario){
-    return signInWithEmailAndPassword(getAuth(), Usuario.email, Usuario.password);
+  login(usuario: Usuario) {
+    return signInWithEmailAndPassword(getAuth(), usuario.email, usuario.password);
   }
 
-  loginGoogle(){
-    return signInWithPopup(getAuth(), new GoogleAuthProvider())
+  loginGoogle() {
+    return signInWithPopup(getAuth(), new GoogleAuthProvider());
   }
 
-  logout(){
+  logout() {
     return signOut(getAuth());
   }
 
-  isAuthenticated():boolean{
+  isAuthenticated(): boolean {
     const user = getAuth().currentUser;
     return user !== null;
   }
