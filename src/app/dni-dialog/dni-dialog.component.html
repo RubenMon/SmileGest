@@ -1,0 +1,11 @@
+<h2 mat-dialog-title>Completa tu registro</h2>
+    <mat-dialog-content>
+      <p>Introduce tu DNI:</p>
+      <mat-form-field appearance="fill">
+        <input matInput [(ngModel)]="dni" placeholder="12345678A" />
+      </mat-form-field>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button mat-dialog-close>Cancelar</button>
+      <button mat-button [mat-dialog-close]="dni" cdkFocusInitial>Aceptar</button>
+    </mat-dialog-actions>

@@ -1,0 +1,71 @@
+/* Título del diálogo */
+h2[mat-dialog-title] {
+  font-size: 28px;
+  color: #0086b3;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* Contenido del diálogo */
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centra el contenido horizontalmente */
+  gap: 16px; /* Espacio entre el texto y el input */
+}
+
+/* Estilo del párrafo */
+mat-dialog-content p {
+  font-size: 22px;
+  color: #333;
+  text-align: center;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  line-height: 1.5;
+}
+
+/* Estilo del input */
+mat-form-field {
+  width: 250px;
+}
+
+/* Centrado total del contenido de acciones del diálogo */
+mat-dialog-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: center; /* Centra horizontalmente los botones */
+  align-items: center;     /* Centra verticalmente los botones */
+  width: 100%;
+  margin-top: 20px;
+  gap: 12px;
+  text-align: center;
+}
+
+
+/* Botones */
+button[mat-button] {
+  background-color: #0086b3;
+  color: white;
+  border-radius: 5px;
+  padding: 8px 20px;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+/* Hover de botones */
+button[mat-button]:hover {
+  background-color: #007399;
+}
+
+
+.mat-dialog-container {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* ¡Clave para que todo se alinee al centro! */
+}

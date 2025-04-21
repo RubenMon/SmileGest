@@ -9,7 +9,7 @@ import { AuthService } from '../../services/user/auth.service';
 import { Router } from '@angular/router';
 import { Usuario } from '../../interfaces/usuario.interface';
 import { ErrorDialogComponent } from '../../errores/error-dialog/error-dialog-component';
-
+import { DniDialogComponent } from '../../dni-dialog/dni-dialog.component';
 
 @Component({
   selector: 'app-login',
@@ -55,15 +55,42 @@ export class LoginComponent {
   }
 
 
-  onClickGoogle() {
-    this.authService.loginGoogle()
-      .then(() => {
-        this.router.navigate(['/inicio']);
-      })
-      .catch(error => {
-        this.showErrorPopup(this.getErrorMessage(error.code));
-      });
+  async onClickGoogle() {
+    try {
+      const result = await this.authService.loginWithGoogleOnly();
+      const user = result.user;
+      const email = user.email!;
+      const uid = user.uid;
+
+      const exists = await this.authService.userExistsInFirestore(email);
+
+      if (!exists) {
+        const dialogRef = this.dialog.open(DniDialogComponent);
+        const dni = await dialogRef.afterClosed().toPromise();
+
+        if (!dni || !/^\d{8}[A-Za-z]$/.test(dni)) {
+          this.showErrorPopup('DNI inválido o cancelado por el usuario');
+          await this.authService.logout(); // opcional
+          return;
+        }
+
+        const dniExists = await this.authService.dniExistsInFirestore(dni);
+        if (dniExists) {
+          this.showErrorPopup('Este DNI ya está registrado con otra cuenta.');
+          await this.authService.logout(); // opcional
+          return;
+        }
+
+
+        await this.authService.saveUserData(uid, email, dni);
+      }
+
+      this.router.navigate(['/inicio']);
+    } catch (error: any) {
+      this.showErrorPopup(this.getErrorMessage(error.code || error.message));
+    }
   }
+
 
   showErrorPopup(message: string) {
     const dialogRef = this.dialog.open(ErrorDialogComponent);
