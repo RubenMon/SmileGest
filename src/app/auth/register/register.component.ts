@@ -7,7 +7,6 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/user/auth.service';
 import { Router } from '@angular/router';
-import { Usuario } from '../../interfaces/usuario.interface';
 import { ErrorDialogComponent } from '../../errores/error-dialog/error-dialog-component';
 
 @Component({
@@ -25,22 +24,52 @@ export class RegisterComponent {
 
   form = new FormGroup({
     email: new FormControl('', [Validators.required, Validators.email]),
-    password: new FormControl('', [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]+$')
+    password: new FormControl('', [
+      Validators.required,
+      Validators.minLength(8),
+      Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]+$')
     ]),
-    dni:new FormControl('', [Validators.required, Validators.pattern('^[0-9]{8}[A-Za-z]$')])
+    dni: new FormControl('', [Validators.required])
   });
 
-  onSubmit() {
-    if (this.form.valid) {
-      this.authService.register(this.form.value as Usuario)
-        .then(() => {
-          this.router.navigate(['/login']);
-        })
-        .catch(error => {
-          this.showErrorPopup(this.getErrorMessage(error.code));
-        });
+  async onSubmit() {
+    const dni = this.form.value.dni!;
+
+    // 1) Validación de formato DNI
+    if (!this.authService.validateDniLetter(dni)) {
+      this.showErrorPopup("El DNI introducido no es válido.");
+      return;
+    }
+
+    // 2) Comprobar si el DNI ya existe
+    let exists: boolean;
+    try {
+      exists = await this.authService.dniExistsInFirestore(dni);
+    } catch (err) {
+      console.error("fallo dniExistsInFirestore:", err);
+      this.showErrorPopup("Ocurrió un error al verificar el DNI.");
+      return;
+    }
+
+    if (exists) {
+      this.showErrorPopup("Este DNI ya está registrado con otra cuenta.");
+      return;
+    }
+
+    // 3) Registrar usuario (solo si el formulario es válido)
+    if (!this.form.valid) {
+      return;
+    }
+
+    try {
+      await this.authService.register(this.form.value);
+      this.router.navigate(['/login']);
+    } catch (error: any) {
+      // aquí gestionas errores de registro (email duplicado, weak-password, ...)
+      this.showErrorPopup(this.getErrorMessage(error.code));
     }
   }
+
 
   getErrorMessage(errorCode: string): string {
     switch (errorCode) {

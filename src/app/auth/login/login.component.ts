@@ -10,11 +10,19 @@ import { Router } from '@angular/router';
 import { Usuario } from '../../interfaces/usuario.interface';
 import { ErrorDialogComponent } from '../../errores/error-dialog/error-dialog-component';
 import { DniDialogComponent } from '../../dni-dialog/dni-dialog.component';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, CommonModule, MatDialogModule],
+  imports: [
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    CommonModule,
+    MatDialogModule,
+  ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
@@ -54,6 +62,11 @@ export class LoginComponent {
     }
   }
 
+  private calcularLetraDNI(numero: string): string {
+    const letras = "TRWAGMYFPDXBNJZSQVHLCKE";
+    const index = parseInt(numero, 10) % 23;
+    return letras.charAt(index);
+  }
 
   async onClickGoogle() {
     try {
@@ -66,21 +79,20 @@ export class LoginComponent {
 
       if (!exists) {
         const dialogRef = this.dialog.open(DniDialogComponent);
-        const dni = await dialogRef.afterClosed().toPromise();
+        const dni = await firstValueFrom(dialogRef.afterClosed());
 
-        if (!dni || !/^\d{8}[A-Za-z]$/.test(dni)) {
-          this.showErrorPopup('DNI inválido o cancelado por el usuario');
-          await this.authService.logout(); // opcional
+        if (!this.authService.validateDniLetter(dni)) {
+          this.showErrorPopup('DNI inválido o cancelado por el usuario.');
+          await this.authService.logout();
           return;
         }
 
         const dniExists = await this.authService.dniExistsInFirestore(dni);
         if (dniExists) {
           this.showErrorPopup('Este DNI ya está registrado con otra cuenta.');
-          await this.authService.logout(); // opcional
+          await this.authService.logout();
           return;
         }
-
 
         await this.authService.saveUserData(uid, email, dni);
       }
@@ -90,7 +102,6 @@ export class LoginComponent {
       this.showErrorPopup(this.getErrorMessage(error.code || error.message));
     }
   }
-
 
   showErrorPopup(message: string) {
     const dialogRef = this.dialog.open(ErrorDialogComponent);

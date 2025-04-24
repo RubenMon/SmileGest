@@ -1,29 +1,40 @@
-import { Usuario } from '../../interfaces/usuario.interface';
 import { Injectable } from "@angular/core";
-import { createUserWithEmailAndPassword, getAuth, GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut } from 'firebase/auth'
-import { getFirestore, doc, setDoc, getDocs, query, where, collection} from 'firebase/firestore';
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut
+} from 'firebase/auth';
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDocs,
+  query,
+  where,
+  collection
+} from 'firebase/firestore';
 
 @Injectable({
   providedIn: 'root'
 })
+export class AuthService {
 
-export class AuthService{
+  constructor() {}
 
-  constructor(){}
-
-  getAuth(){
+  getAuth() {
     return getAuth();
   }
 
-  register(usuario: Usuario) {
+  register(usuario: any) {
     const auth = getAuth();
     const db = getFirestore();
 
     return createUserWithEmailAndPassword(auth, usuario.email, usuario.password)
       .then((userCredential) => {
         const uid = userCredential.user.uid;
-
-        // Guardar email y dni en la colección "users"
         const userRef = doc(db, 'users', uid);
         return setDoc(userRef, {
           email: usuario.email,
@@ -32,8 +43,8 @@ export class AuthService{
       });
   }
 
-  login(Usuario:Usuario){
-    return signInWithEmailAndPassword(getAuth(), Usuario.email, Usuario.password);
+  login(usuario: any) {
+    return signInWithEmailAndPassword(getAuth(), usuario.email, usuario.password);
   }
 
   loginWithGoogleOnly() {
@@ -45,8 +56,15 @@ export class AuthService{
   async userExistsInFirestore(email: string): Promise<boolean> {
     const db = getFirestore();
     const q = query(collection(db, 'users'), where('email', '==', email));
-    const querySnapshot = await getDocs(q);
-    return !querySnapshot.empty;
+    const snapshot = await getDocs(q);
+    return !snapshot.empty;
+  }
+
+  async dniExistsInFirestore(dni: string): Promise<boolean> {
+    const db = getFirestore();
+    const q = query(collection(db, 'users'), where('dni', '==', dni));
+    const snapshot = await getDocs(q);
+    return !snapshot.empty;
   }
 
   async saveUserData(uid: string, email: string, dni: string) {
@@ -55,19 +73,19 @@ export class AuthService{
     return setDoc(userRef, { email, dni });
   }
 
-  async dniExistsInFirestore(dni: string): Promise<boolean> {
-    const db = getFirestore();
-    const q = query(collection(db, 'users'), where('dni', '==', dni));
-    const querySnapshot = await getDocs(q);
-    return !querySnapshot.empty;
-  }
-
-  logout(){
+  logout() {
     return signOut(getAuth());
   }
 
-  isAuthenticated():boolean{
-    const user = getAuth().currentUser;
-    return user !== null;
+  isAuthenticated(): boolean {
+    return getAuth().currentUser !== null;
+  }
+
+  validateDniLetter(dni: string): boolean {
+    if (!dni || !/^\d{8}[A-Za-z]$/.test(dni)) return false;
+    const number = parseInt(dni.substring(0, 8), 10);
+    const letter = dni.charAt(8).toUpperCase();
+    const validLetters = "TRWAGMYFPDXBNJZSQVHLCKE";
+    return letter === validLetters.charAt(number % 23);
   }
 }
