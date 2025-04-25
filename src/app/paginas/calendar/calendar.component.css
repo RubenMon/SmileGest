@@ -1,0 +1,128 @@
+.calendar {
+  background: #ffffff;
+  max-width: 90%;
+  margin: 2rem auto;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 4px;
+  font-family: 'Roboto', sans-serif;
+  color: #202124;
+
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  overflow: hidden;
+}
+
+.calendar__add-top {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.calendar__add-top button {
+  font-size: 1rem;
+  padding: 0.5rem 1.5rem;
+}
+
+.calendar__controls {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.calendar__controls button {
+  margin: 0 0.5rem;
+}
+
+.calendar__navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  background: #fff;
+}
+.calendar__navigation span {
+  font-weight: 500;
+  flex: 1;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  background: #e0e0e0;
+  border-radius: 4px;
+}
+
+.calendar__day-name {
+  background: #f1f3f4;
+  padding: 0.75rem 0;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-bottom: 1px solid #e0e0e0;
+  border-right: 1px solid #e0e0e0;
+}
+
+.calendar__day {
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+  min-height: 100px;
+  max-height: 120px;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background 0.2s;
+}
+.calendar__day:hover {
+  background: #b7d1fe;
+}
+
+.calendar__day-header {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #5f6368;
+  margin-bottom: 0.3rem;
+}
+
+.calendar__day--current-day {
+  background: #b7d1fe;
+}
+
+.calendar__events {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  max-height: 100px;
+}
+
+.calendar__events::-webkit-scrollbar {
+  display: none;
+}
+.calendar__event {
+  background: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: filter 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+  height: 24px;
+  line-height: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar__event:hover {
+  filter: brightness(0.95);
+}

@@ -2,7 +2,7 @@ import { Component, OnInit, effect, inject } from '@angular/core';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { Calendar } from '../../interfaces/calendar.interface';
 import { Events } from '../../interfaces/events.interface';
-import { DatePipe, NgClass, NgStyle } from '@angular/common';
+import { DatePipe, NgClass, NgStyle, NgIf, NgFor } from '@angular/common';
 import { ModalEventsService } from '../../services/calendar/modal-events.service';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from '@angular/material/icon';
@@ -13,20 +13,24 @@ import { MatDialog } from '@angular/material/dialog';
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [MatButton, NgClass, MatTooltip, MatIcon, MatMenuModule, DatePipe, MatIconButton, NgStyle, DeleteComponent,],
+  imports: [
+    MatButton, MatIconButton, MatIcon,
+    MatMenuModule, NgClass, NgStyle, NgIf, NgFor, DatePipe, MatTooltip, DeleteComponent
+  ],
   templateUrl: './calendar.component.html',
-  styleUrls: ['./calendar.component.scss']
+  styleUrls: ['./calendar.component.css']
 })
 export class CalendarComponent implements OnInit {
   private modalSvc = inject(ModalEventsService);
   private dialog = inject(MatDialog);
 
-  nameDay = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  nameDay = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
   calendarDays: Calendar[] = [];
+  weekDays: Calendar[] = [];
   allEvents: Events[] = [];
   currentMonthAndYear?: string;
-
-  private totalDays = 42;
+  currentWeekRange?: string;
+  viewMode: 'month' | 'week' = 'month';
   private date = new Date();
 
   constructor() {
@@ -37,18 +41,30 @@ export class CalendarComponent implements OnInit {
     this.initializeCalendar();
   }
 
+  toggleView(mode: 'month' | 'week') {
+    this.viewMode = mode;
+    this.initializeCalendar();
+  }
+
+  openModal() {
+    this.modalSvc.openModal();
+  }
+
   private initializeCalendar() {
-    this.updateCurrentMonthAndYear();
     this.loadEvents();
-    this.createCalendarDays();
+    if (this.viewMode === 'month') {
+      this.updateCurrentMonthAndYear();
+      this.createCalendarDays();
+    } else {
+      this.updateCurrentWeekRange();
+      this.createWeekDays();
+    }
   }
 
   private checkForNewEvents() {
     effect(() => {
       const newEvent = this.modalSvc.getEvent;
-      if (newEvent) {
-        this.updateEvent(newEvent);
-      }
+      if (newEvent) this.createOrUpdateEvent(newEvent);
     });
   }
 
@@ -56,119 +72,104 @@ export class CalendarComponent implements OnInit {
     this.allEvents = this.modalSvc.getAllEvents();
   }
 
-  formatDate(date: Date | string): string {
-    const parsedDate = new Date(date);
-    if (isNaN(parsedDate.getTime())) {
-      console.error('Invalid date:', date);
-      return 'Fecha inválida';
-    }
-    return parsedDate.toLocaleDateString('es-ES', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
-  }
-
-  private updateEvent(item: Events) {
-    this.allEvents = this.allEvents.filter(event => event.id !== item.id).concat(item);
+  private createOrUpdateEvent(item: Events) {
+    const idx = this.allEvents.findIndex(ev => ev.id === item.id);
+    if (idx > -1) this.allEvents[idx] = item;
+    else this.allEvents.push(item);
     this.modalSvc.saveEvents();
-    this.createCalendarDays();
+    this.initializeCalendar();
   }
 
   private updateCurrentMonthAndYear() {
     const monthNames = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+      'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
     ];
     this.currentMonthAndYear = `${monthNames[this.date.getMonth()]} de ${this.date.getFullYear()}`;
   }
 
-  previousMonth() {
-    this.date.setMonth(this.date.getMonth() - 1);
+  previous() {
+    if (this.viewMode === 'month') this.date.setMonth(this.date.getMonth() - 1);
+    else this.date.setDate(this.date.getDate() - 7);
     this.initializeCalendar();
   }
 
-  nextMonth() {
-    this.date.setMonth(this.date.getMonth() + 1);
+  next() {
+    if (this.viewMode === 'month') this.date.setMonth(this.date.getMonth() + 1);
+    else this.date.setDate(this.date.getDate() + 7);
     this.initializeCalendar();
   }
 
   private createCalendarDays() {
     this.calendarDays = [];
-    const today = new Date();
-    const firstDayOfMonth = new Date(this.date.getFullYear(), this.date.getMonth(), 1).getDay();
-    const daysInMonth = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).getDate();
-    const prevDaysMonth = new Date(this.date.getFullYear(), this.date.getMonth(), 0).getDate();
+    const year = this.date.getFullYear(),
+          month = this.date.getMonth(),
+          daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    this.addCalendarDaysFromPreviousMonth(firstDayOfMonth, prevDaysMonth);
-    this.addCalendarDaysFromCurrentMonth(today, daysInMonth);
-    this.addCalendarDaysFromNextMonth();
-  }
-
-  private addCalendarDaysFromPreviousMonth(firstDayOfMonth: number, prevDaysMonth: number) {
-    for (let i = firstDayOfMonth; i > 0; i--) {
-      const day = prevDaysMonth - i + 1;
-      this.addCalendarDay(this.date.getFullYear(), this.date.getMonth() - 1, day, false, false);
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dt = new Date(year, month, d);
+      this.calendarDays.push({
+        day: d,
+        currentDay: dt.toDateString() === new Date().toDateString(),
+        currentMonth: true,
+        date: dt,
+        events: this.getEventsForDate(dt)
+      });
     }
   }
 
-  private addCalendarDaysFromCurrentMonth(today: Date, daysInMonth: number) {
-    for (let i = 1; i <= daysInMonth; i++) {
-      const isCurrentDay = today.toDateString() === new Date(this.date.getFullYear(), this.date.getMonth(), i).toDateString();
-      this.addCalendarDay(this.date.getFullYear(), this.date.getMonth(), i, isCurrentDay, true);
+  private updateCurrentWeekRange() {
+    const dt = new Date(this.date);
+    const day = dt.getDay() || 7;
+    const monday = new Date(dt.setDate(dt.getDate() - (day - 1)));
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    this.currentWeekRange = `${monday.toLocaleDateString('es-ES')} - ${sunday.toLocaleDateString('es-ES')}`;
+  }
+
+  private createWeekDays() {
+    this.weekDays = [];
+    const dt = new Date(this.date);
+    const day = dt.getDay() || 7;
+    const monday = new Date(dt.setDate(dt.getDate() - (day - 1)));
+
+    for (let i = 0; i < 7; i++) {
+      const wd = new Date(monday);
+      wd.setDate(monday.getDate() + i);
+      this.weekDays.push({
+        day: wd.getDate(),
+        currentDay: wd.toDateString() === new Date().toDateString(),
+        currentMonth: wd.getMonth() === this.date.getMonth(),
+        date: wd,
+        events: this.getEventsForDate(wd)
+      });
     }
   }
 
-  private addCalendarDaysFromNextMonth() {
-    const remainingDays = this.totalDays - this.calendarDays.length;
-    for (let i = 1; i <= remainingDays; i++) {
-      this.addCalendarDay(this.date.getFullYear(), this.date.getMonth() + 1, i, false, false);
-    }
+  private getEventsForDate(date: Date) {
+    return this.allEvents.filter(ev =>
+      new Date(ev.date).toDateString() === date.toDateString()
+    );
   }
-  private addCalendarDay(year: number, month: number, day: number, isCurrentDay: boolean, isCurrentMonth: boolean) {
-    const date = new Date(year, month, day);
-    this.calendarDays.push({
-      day,
-      currentDay: isCurrentDay,
-      currentMonth: isCurrentMonth,
-      events: this.getEventsForDate(date),
-      date,
+
+  formatDate(date: Date | string) {
+    return new Date(date).toLocaleDateString('es-ES', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
   }
 
-  private getEventsForDate(date: Date): Events[] {
-    return this.allEvents.filter(event => {
-      const eventDate = new Date(event.date);
-      return eventDate.toDateString() === date.toDateString();
-    });
+  editModal(e: Events) {
+    this.modalSvc.openModal(e);
   }
 
-  openModal() {
-    this.modalSvc.openModal();
-  }
-
-  editModal(event: Events) {
-    this.modalSvc.openModal(event);
-  }
-
-  removeEvent(calendarIndex: number, eventIndex: number): void {
+  removeEvent(i: number, j: number) {
     const dialogRef = this.dialog.open(DeleteComponent);
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        const eventToRemove = this.calendarDays[calendarIndex].events[eventIndex];
-        this.allEvents = this.allEvents.filter(event => event.id !== eventToRemove.id);
-        this.modalSvc.deleteEvent(eventToRemove.id);
-        this.createCalendarDays();
-      }
+    dialogRef.afterClosed().subscribe(ok => {
+      if (!ok) return;
+      const ev = (this.viewMode === 'month' ? this.calendarDays : this.weekDays)[i].events[j];
+      this.allEvents = this.allEvents.filter(x => x.id !== ev.id);
+      this.modalSvc.deleteEvent(ev.id);
+      this.initializeCalendar();
     });
-  }
-
-  createEvent(item: Events) {
-    const existingEventIndex = this.allEvents.findIndex(event => event.id === item.id);
-    if (existingEventIndex > -1) {
-      this.allEvents[existingEventIndex] = item;
-    } else {
-      this.allEvents.push(item);
-    }
-    this.modalSvc.setEvent(item);
-    this.createCalendarDays();
   }
 }
