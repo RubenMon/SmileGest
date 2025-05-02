@@ -38,7 +38,8 @@ export class AuthService {
         const userRef = doc(db, 'users', uid);
         return setDoc(userRef, {
           email: usuario.email,
-          dni: usuario.dni
+          dni: usuario.dni,
+          nombreCompleto: usuario.nombreCompleto
         });
       });
   }
@@ -67,10 +68,10 @@ export class AuthService {
     return !snapshot.empty;
   }
 
-  async saveUserData(uid: string, email: string, dni: string) {
+  async saveUserData(uid: string, email: string, dni: string, nombreCompleto: string) {
     const db = getFirestore();
     const userRef = doc(db, 'users', uid);
-    return setDoc(userRef, { email, dni });
+    return setDoc(userRef, { email, dni, nombreCompleto });
   }
 
   logout() {

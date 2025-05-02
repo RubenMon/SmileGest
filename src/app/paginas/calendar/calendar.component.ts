@@ -80,40 +80,68 @@ export class CalendarComponent implements OnInit {
     this.initializeCalendar();
   }
 
-  private updateCurrentMonthAndYear() {
-    const monthNames = [
-      'Enero','Febrero','Marzo','Abril','Mayo','Junio',
-      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
-    ];
-    this.currentMonthAndYear = `${monthNames[this.date.getMonth()]} de ${this.date.getFullYear()}`;
-  }
+private updateCurrentMonthAndYear() {
+  const monthNames = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+  this.currentMonthAndYear = `${monthNames[this.date.getMonth()]} de ${this.date.getFullYear()}`;
+}
 
-  previous() {
-    if (this.viewMode === 'month') this.date.setMonth(this.date.getMonth() - 1);
-    else this.date.setDate(this.date.getDate() - 7);
-    this.initializeCalendar();
+previous() {
+  if (this.viewMode === 'month') {
+    this.date.setMonth(this.date.getMonth() - 1);
+    this.updateCurrentMonthAndYear();  // Actualiza el mes al navegar
+  } else {
+    this.date.setDate(this.date.getDate() - 7);
   }
+  this.initializeCalendar();
+}
 
-  next() {
-    if (this.viewMode === 'month') this.date.setMonth(this.date.getMonth() + 1);
-    else this.date.setDate(this.date.getDate() + 7);
-    this.initializeCalendar();
+next() {
+  if (this.viewMode === 'month') {
+    this.date.setMonth(this.date.getMonth() + 1);
+    this.updateCurrentMonthAndYear();  // Actualiza el mes al navegar
+  } else {
+    this.date.setDate(this.date.getDate() + 7);
   }
+  this.initializeCalendar();
+}
+
 
   private createCalendarDays() {
     this.calendarDays = [];
-    const year = this.date.getFullYear(),
-          month = this.date.getMonth(),
-          daysInMonth = new Date(year, month + 1, 0).getDate();
+    const year = this.date.getFullYear();
+    const month = this.date.getMonth();
 
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const daysInMonth = lastDayOfMonth.getDate();
+
+    // Ajuste para que la semana comience en Lunes (0 = Lunes, ..., 6 = Domingo)
+    const jsDay = firstDayOfMonth.getDay();
+    const blankDays = (jsDay + 6) % 7;
+
+    for (let i = 0; i < blankDays; i++) {
+      this.calendarDays.push({
+        day: null,
+        currentDay: false,
+        currentMonth: false,
+        date: null!,
+        events: []
+      });
+    }
+
+
+    // Días del mes actual
     for (let d = 1; d <= daysInMonth; d++) {
-      const dt = new Date(year, month, d);
+      const date = new Date(year, month, d);
       this.calendarDays.push({
         day: d,
-        currentDay: dt.toDateString() === new Date().toDateString(),
+        currentDay: date.toDateString() === new Date().toDateString(),
         currentMonth: true,
-        date: dt,
-        events: this.getEventsForDate(dt)
+        date,
+        events: this.getEventsForDate(date)
       });
     }
   }

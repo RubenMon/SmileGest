@@ -23,6 +23,10 @@ export class RegisterComponent {
   dialog = inject(MatDialog);
 
   form = new FormGroup({
+    nombreCompleto: new FormControl('', [
+      Validators.required,
+      Validators.pattern(/^[\p{L}][\p{L}\p{M}\p{Zs}'-]{1,100}$/u)
+    ]),
     email: new FormControl('', [Validators.required, Validators.email]),
     password: new FormControl('', [
       Validators.required,
@@ -33,18 +37,16 @@ export class RegisterComponent {
   });
 
   async onSubmit() {
-    const dni = this.form.value.dni!;
+    const { dni, nombreCompleto } = this.form.value;
 
-    // 1) Validación de formato DNI
-    if (!this.authService.validateDniLetter(dni)) {
+    if (!this.authService.validateDniLetter(dni!)) {
       this.showErrorPopup("El DNI introducido no es válido.");
       return;
     }
 
-    // 2) Comprobar si el DNI ya existe
     let exists: boolean;
     try {
-      exists = await this.authService.dniExistsInFirestore(dni);
+      exists = await this.authService.dniExistsInFirestore(dni!);
     } catch (err) {
       console.error("fallo dniExistsInFirestore:", err);
       this.showErrorPopup("Ocurrió un error al verificar el DNI.");
@@ -56,7 +58,6 @@ export class RegisterComponent {
       return;
     }
 
-    // 3) Registrar usuario (solo si el formulario es válido)
     if (!this.form.valid) {
       return;
     }
@@ -65,11 +66,9 @@ export class RegisterComponent {
       await this.authService.register(this.form.value);
       this.router.navigate(['/login']);
     } catch (error: any) {
-      // aquí gestionas errores de registro (email duplicado, weak-password, ...)
       this.showErrorPopup(this.getErrorMessage(error.code));
     }
   }
-
 
   getErrorMessage(errorCode: string): string {
     switch (errorCode) {

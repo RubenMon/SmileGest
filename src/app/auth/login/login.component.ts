@@ -79,10 +79,18 @@ export class LoginComponent {
 
       if (!exists) {
         const dialogRef = this.dialog.open(DniDialogComponent);
-        const dni = await firstValueFrom(dialogRef.afterClosed());
+        const result = await firstValueFrom(dialogRef.afterClosed());
+
+        if (!result || !result.dni || !result.nombreCompleto) {
+          this.showErrorPopup('Datos inválidos o cancelados por el usuario.');
+          await this.authService.logout();
+          return;
+        }
+
+        const { dni, nombreCompleto } = result;
 
         if (!this.authService.validateDniLetter(dni)) {
-          this.showErrorPopup('DNI inválido o cancelado por el usuario.');
+          this.showErrorPopup('DNI inválido.');
           await this.authService.logout();
           return;
         }
@@ -94,7 +102,7 @@ export class LoginComponent {
           return;
         }
 
-        await this.authService.saveUserData(uid, email, dni);
+        await this.authService.saveUserData(uid, email, dni, nombreCompleto);
       }
 
       this.router.navigate(['/inicio']);
@@ -102,6 +110,7 @@ export class LoginComponent {
       this.showErrorPopup(this.getErrorMessage(error.code || error.message));
     }
   }
+
 
   showErrorPopup(message: string) {
     const dialogRef = this.dialog.open(ErrorDialogComponent);
