@@ -21,8 +21,21 @@ import {
   providedIn: 'root'
 })
 export class AuthService {
+  // Propiedad para almacenar el email del usuario actual
+  private currentEmail: string | null = null;
 
   constructor() {}
+
+  // Métodos para gestionar el email actual
+  setCurrentEmail(email: string) {
+    this.currentEmail = email;
+  }
+
+  getCurrentEmail(): string | null {
+    const user = getAuth().currentUser;
+    return user?.email || null;
+  }
+
 
   getAuth() {
     return getAuth();
@@ -34,6 +47,9 @@ export class AuthService {
 
     return createUserWithEmailAndPassword(auth, usuario.email, usuario.password)
       .then((userCredential) => {
+        // Guardar email tras registro
+        this.setCurrentEmail(usuario.email);
+
         const uid = userCredential.user.uid;
         const userRef = doc(db, 'users', uid);
         return setDoc(userRef, {
@@ -45,13 +61,24 @@ export class AuthService {
   }
 
   login(usuario: any) {
-    return signInWithEmailAndPassword(getAuth(), usuario.email, usuario.password);
+    return signInWithEmailAndPassword(getAuth(), usuario.email, usuario.password)
+      .then(result => {
+        // Guardar email tras login clásico
+        this.setCurrentEmail(result.user.email!);
+        return result;
+      });
   }
 
   loginWithGoogleOnly() {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
+    return signInWithPopup(auth, provider)
+      .then(result => {
+        // Guardar email tras login con Google
+        const email = result.user.email!;
+        this.setCurrentEmail(email);
+        return result;
+      });
   }
 
   async userExistsInFirestore(email: string): Promise<boolean> {

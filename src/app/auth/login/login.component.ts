@@ -27,7 +27,6 @@ import { firstValueFrom } from 'rxjs';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-
   authService = inject(AuthService);
   router = inject(Router);
   dialog = inject(MatDialog);
@@ -110,7 +109,6 @@ export class LoginComponent {
       this.showErrorPopup(this.getErrorMessage(error.code || error.message));
     }
   }
-
 
   showErrorPopup(message: string) {
     const dialogRef = this.dialog.open(ErrorDialogComponent);

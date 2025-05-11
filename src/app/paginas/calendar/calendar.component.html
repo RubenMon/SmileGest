@@ -1,7 +1,8 @@
 <section class="calendar">
-  <!-- Botón “+ Nuevo evento” -->
   <div class="calendar__add-top">
-    <button mat-raised-button color="primary" (click)="openModal()">Nuevo evento</button>
+    <button mat-raised-button color="primary" (click)="showEventModal()">
+      Nuevo evento
+    </button>
   </div>
 
   <div class="calendar__controls">
@@ -20,36 +21,40 @@
     </button>
   </div>
 
-  <!-- Vista Mes -->
   <div *ngIf="viewMode==='month'" class="calendar__grid">
     <span class="calendar__day-name" *ngFor="let n of nameDay">{{ n }}</span>
-    <div class="calendar__day" *ngFor="let day of calendarDays; let idx = index"
-         [ngClass]="{'calendar__day--current-day': day.currentDay}">
+    <div
+      class="calendar__day"
+      *ngFor="let day of calendarDays; let i = index"
+      [ngClass]="{'calendar__day--current-day': day.currentDay}"
+    >
       <div class="calendar__day-header"><span>{{ day.day }}</span></div>
       <div class="calendar__events">
         <button
           class="calendar__event"
           *ngFor="let ev of day.events; let j = index"
-          (click)="editModal(ev)"
+          (click)="showEventModal(ev, i, j)"
           [ngStyle]="{ 'background-color': ev.background, 'color': ev.color }"
         >
-          {{ ev.name }}
+        {{ ev.name }} - {{ ev.patientName }} - {{ ev.patientDni }}
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Vista Semana -->
   <div *ngIf="viewMode==='week'" class="calendar__grid">
     <span class="calendar__day-name" *ngFor="let n of nameDay">{{ n }}</span>
-    <div class="calendar__day" *ngFor="let day of weekDays; let idx = index"
-         [ngClass]="{'calendar__day--current-day': day.currentDay}">
+    <div
+      class="calendar__day"
+      *ngFor="let day of weekDays; let i = index"
+      [ngClass]="{'calendar__day--current-day': day.currentDay}"
+    >
       <div class="calendar__day-header"><span>{{ day.day }}</span></div>
       <div class="calendar__events">
         <button
           class="calendar__event"
           *ngFor="let ev of day.events; let j = index"
-          (click)="editModal(ev)"
+          (click)="showEventModal(ev)"
           [ngStyle]="{ 'background-color': ev.background, 'color': ev.color }"
         >
           {{ ev.name }}

@@ -1,29 +1,30 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { ModalEventsComponent } from '../../modals/modal-events/modal-events.component';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Events } from '../../interfaces/events.interface';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ModalEventsService {
   private modalData = signal<Events | null>(null);
   private dialog = inject(MatDialog);
   private storageKey = 'calendarEvents';
+  dialogRef: MatDialogRef<any> | null = null;  // Guardar dialogRef
 
-  constructor() {
-    this.loadEvents();
-  }
-
-  openModal(data?: Events): void {
-    const dialogRef = this.dialog.open(ModalEventsComponent, {
+  openModal(component: any, data?: Events): void {
+    this.dialogRef = this.dialog.open(component, {
       data,
       width: '70vw'
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    // Suscripción al cierre del modal
+    this.dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.setEvent(result);
+        // Si el evento es nuevo o modificado
+        if (result.action === 'modified' || result.action === 'added') {
+          this.setEvent(result.event);
+        } else if (result.action === 'deleted') {
+          // Si se eliminó el evento
+          this.deleteEvent(result.event.id);
+        }
         this.saveEvents();
       }
     });
@@ -48,24 +49,17 @@ export class ModalEventsService {
     if (updatedEvent) {
       const index = allEvents.findIndex(e => e.id === updatedEvent.id);
       if (index !== -1) {
-        allEvents[index] = updatedEvent;
+        allEvents[index] = updatedEvent; // Modificamos el evento existente
       } else {
-        allEvents.push(updatedEvent);
+        allEvents.push(updatedEvent); // Agregamos un nuevo evento
       }
     }
     localStorage.setItem(this.storageKey, JSON.stringify(allEvents));
   }
 
-  loadEvents() {
-    const events = this.getAllEvents();
-    if (events.length > 0) {
-      this.modalData.set(events[events.length - 1]);
-    }
-  }
-
   deleteEvent(eventId: string) {
     let events = this.getAllEvents();
-    events = events.filter(e => e.id !== eventId);
+    events = events.filter(e => e.id !== eventId); // Filtramos el evento a eliminar
     localStorage.setItem(this.storageKey, JSON.stringify(events));
   }
 }
