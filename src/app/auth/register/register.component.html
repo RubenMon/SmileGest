@@ -1,6 +1,23 @@
 <div class="register-container">
   <h2>Registro</h2>
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+    <mat-form-field appearance="fill">
+      <mat-label>Nombre completo</mat-label>
+      <input matInput placeholder="Nombre completo" type="text" formControlName="nombreCompleto">
+      <mat-error *ngIf="form.get('nombreCompleto')?.invalid && form.get('nombreCompleto')?.touched">
+        {{ form.get('nombreCompleto')?.hasError('required') ? 'El nombre es obligatorio' : 'Nombre inválido' }}
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>DNI</mat-label>
+      <input matInput placeholder="DNI" type="text" formControlName="dni">
+      <mat-error *ngIf="form.get('dni')?.invalid && form.get('dni')?.touched">
+        {{ form.get('dni')?.hasError('required') ? 'El DNI es obligatorio' : 'DNI inválido' }}
+      </mat-error>
+    </mat-form-field>
+
     <mat-form-field appearance="fill">
       <mat-label>Correo electrónico</mat-label>
       <input matInput placeholder="Correo electrónico" type="email" formControlName="email">
@@ -13,7 +30,7 @@
       <mat-label>Contraseña</mat-label>
       <input matInput placeholder="Contraseña" type="password" formControlName="password">
       <mat-error *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
-        {{ form.get('password')?.hasError('required') ? 'La contraseña es obligatoria' : 'Debe tener al menos 8 caracteres, una letra mayúsculas, una letra minúscula y un número' }}
+        {{ form.get('password')?.hasError('required') ? 'La contraseña es obligatoria' : 'Debe tener al menos 8 caracteres, una letra mayúscula, una letra minúscula y un número' }}
       </mat-error>
     </mat-form-field>
 

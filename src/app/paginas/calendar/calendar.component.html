@@ -1,0 +1,65 @@
+<section class="calendar">
+  <div class="calendar__add-top">
+    <button mat-raised-button color="primary" (click)="showEventModal()">
+      Nuevo evento
+    </button>
+  </div>
+
+  <div class="calendar__controls">
+    <button mat-button (click)="toggleView('month')">Vista Mes</button>
+    <button mat-button (click)="toggleView('week')">Vista Semana</button>
+  </div>
+
+  <div class="calendar__navigation">
+    <button mat-icon-button (click)="previous()">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span *ngIf="viewMode==='month'">{{ currentMonthAndYear }}</span>
+    <span *ngIf="viewMode==='week'">{{ currentWeekRange }}</span>
+    <button mat-icon-button (click)="next()">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <div *ngIf="viewMode==='month'" class="calendar__grid">
+    <span class="calendar__day-name" *ngFor="let n of nameDay">{{ n }}</span>
+    <div
+      class="calendar__day"
+      *ngFor="let day of calendarDays; let i = index"
+      [ngClass]="{'calendar__day--current-day': day.currentDay}"
+    >
+      <div class="calendar__day-header"><span>{{ day.day }}</span></div>
+      <div class="calendar__events">
+        <button
+          class="calendar__event"
+          *ngFor="let ev of day.events; let j = index"
+          (click)="showEventModal(ev, i, j)"
+          [ngStyle]="{ 'background-color': ev.background, 'color': ev.color }"
+        >
+        {{ ev.name }} - {{ ev.patientName }} - {{ ev.patientDni }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="viewMode==='week'" class="calendar__grid">
+    <span class="calendar__day-name" *ngFor="let n of nameDay">{{ n }}</span>
+    <div
+      class="calendar__day"
+      *ngFor="let day of weekDays; let i = index"
+      [ngClass]="{'calendar__day--current-day': day.currentDay}"
+    >
+      <div class="calendar__day-header"><span>{{ day.day }}</span></div>
+      <div class="calendar__events">
+        <button
+          class="calendar__event"
+          *ngFor="let ev of day.events; let j = index"
+          (click)="showEventModal(ev)"
+          [ngStyle]="{ 'background-color': ev.background, 'color': ev.color }"
+        >
+          {{ ev.name }}
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

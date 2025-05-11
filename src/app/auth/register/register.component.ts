@@ -5,9 +5,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../services/user/auth.service';
 import { Router } from '@angular/router';
-import { Usuario } from '../../interfaces/usuario.interface';
 import { ErrorDialogComponent } from '../../errores/error-dialog/error-dialog-component';
 
 @Component({
@@ -24,20 +23,50 @@ export class RegisterComponent {
   dialog = inject(MatDialog);
 
   form = new FormGroup({
+    nombreCompleto: new FormControl('', [
+      Validators.required,
+      Validators.pattern(/^[\p{L}][\p{L}\p{M}\p{Zs}'-]{1,100}$/u)
+    ]),
     email: new FormControl('', [Validators.required, Validators.email]),
-    password: new FormControl('', [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]+$')
-    ])
+    password: new FormControl('', [
+      Validators.required,
+      Validators.minLength(8),
+      Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]+$')
+    ]),
+    dni: new FormControl('', [Validators.required])
   });
 
-  onSubmit() {
-    if (this.form.valid) {
-      this.authService.register(this.form.value as Usuario)
-        .then(() => {
-          this.router.navigate(['/login']);
-        })
-        .catch(error => {
-          this.showErrorPopup(this.getErrorMessage(error.code));
-        });
+  async onSubmit() {
+    const { dni, nombreCompleto } = this.form.value;
+
+    if (!this.authService.validateDniLetter(dni!)) {
+      this.showErrorPopup("El DNI introducido no es válido.");
+      return;
+    }
+
+    let exists: boolean;
+    try {
+      exists = await this.authService.dniExistsInFirestore(dni!);
+    } catch (err) {
+      console.error("fallo dniExistsInFirestore:", err);
+      this.showErrorPopup("Ocurrió un error al verificar el DNI.");
+      return;
+    }
+
+    if (exists) {
+      this.showErrorPopup("Este DNI ya está registrado con otra cuenta.");
+      return;
+    }
+
+    if (!this.form.valid) {
+      return;
+    }
+
+    try {
+      await this.authService.register(this.form.value);
+      this.router.navigate(['/login']);
+    } catch (error: any) {
+      this.showErrorPopup(this.getErrorMessage(error.code));
     }
   }
 
