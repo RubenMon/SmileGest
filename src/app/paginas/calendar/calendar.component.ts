@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, effect } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { Calendar } from '../../interfaces/calendar.interface';
 import { Events } from '../../interfaces/events.interface';
@@ -11,7 +11,7 @@ import { DeleteComponent } from '../../modals/delete/delete.component';
 import { MatDialog } from '@angular/material/dialog';
 import { getAuth } from 'firebase/auth';
 import { ModalAdminEventsComponent } from '../../modals/modal-admin-events/modal-admin-events.component';
-import { ModalEventsComponent } from '../../modals/modal-events/modal-events.component';
+import { ModalUserEventsComponent } from '../../modals/modal-user-events/modal-user-events.component';
 
 @Component({
   selector: 'app-calendar',
@@ -24,10 +24,7 @@ import { ModalEventsComponent } from '../../modals/modal-events/modal-events.com
     NgClass,
     NgStyle,
     NgIf,
-    NgFor,
-    DatePipe,
-    MatTooltip,
-    DeleteComponent
+    NgFor
   ],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.css']
@@ -45,11 +42,8 @@ export class CalendarComponent implements OnInit {
   viewMode: 'month' | 'week' = 'month';
   private date = new Date();
 
-  constructor() {
-    this.checkForNewEvents();
-  }
-
   ngOnInit(): void {
+    this.subscribeToEvents();
     this.initializeCalendar();
   }
 
@@ -58,45 +52,30 @@ export class CalendarComponent implements OnInit {
     this.initializeCalendar();
   }
 
-  /**
-   * Crea o edita un evento.
-   * Si pasa `ev`, se edita; si no, se abre modal en blanco.
-   */
-showEventModal(ev?: Events, i?: number, j?: number) {
-  const user = getAuth().currentUser;
-  const isAdmin = user?.email === 'administracionclinica@gmail.com';
-  const ModalComp = isAdmin
-    ? ModalAdminEventsComponent
-    : ModalEventsComponent;
-
-  // Llamamos a openModal pasándole también los índices
-  this.modalSvc.openModal(ModalComp, ev);
-
-  // Suscribimos a la acción de cierre del modal usando el dialogRef
-  if (this.modalSvc.dialogRef) {
-    this.modalSvc.dialogRef.afterClosed().subscribe(result => {
-      if (result === 'deleted' && ev && i !== undefined && j !== undefined) {
-        this.removeEvent(i, j); // Llamamos a removeEvent para actualizar el calendario
-      }
-    });
+  showEventModal(ev?: Events, i?: number, j?: number) {
+    const user = getAuth().currentUser;
+    const isAdmin = user?.email === 'administracionclinica@gmail.com';
+    const ModalComp = isAdmin ? ModalAdminEventsComponent : ModalUserEventsComponent;
+    this.modalSvc.openModal(ModalComp, ev);
   }
-}
-
-
 
   removeEvent(i: number, j: number) {
     const dialogRef = this.dialog.open(DeleteComponent);
     dialogRef.afterClosed().subscribe(ok => {
       if (!ok) return;
       const ev = (this.viewMode === 'month' ? this.calendarDays : this.weekDays)[i].events[j];
-      this.allEvents = this.allEvents.filter(x => x.id !== ev.id);
-      this.modalSvc.deleteEvent(ev.id);
+      this.modalSvc.deleteEventFromFirestore(ev.id);
+    });
+  }
+
+  private subscribeToEvents() {
+    this.modalSvc.events$.subscribe(events => {
+      this.allEvents = events;
       this.initializeCalendar();
     });
   }
 
   private initializeCalendar() {
-    this.loadEvents();
     if (this.viewMode === 'month') {
       this.updateCurrentMonthAndYear();
       this.createCalendarDays();
@@ -104,24 +83,6 @@ showEventModal(ev?: Events, i?: number, j?: number) {
       this.updateCurrentWeekRange();
       this.createWeekDays();
     }
-  }
-
-  private checkForNewEvents() {
-    effect(() => {
-      const newEvent = this.modalSvc.getEvent;
-      if (newEvent) this.createOrUpdateEvent(newEvent);
-    });
-  }
-
-  private loadEvents() {
-    this.allEvents = this.modalSvc.getAllEvents();
-  }
-
-  private createOrUpdateEvent(item: Events) {
-    const idx = this.allEvents.findIndex(ev => ev.id === item.id);
-    if (idx > -1) this.allEvents[idx] = item;
-    else this.allEvents.push(item);
-    this.initializeCalendar();
   }
 
   private updateCurrentMonthAndYear() {
@@ -132,22 +93,13 @@ showEventModal(ev?: Events, i?: number, j?: number) {
     this.currentMonthAndYear = `${monthNames[this.date.getMonth()]} de ${this.date.getFullYear()}`;
   }
 
-  previous() {
-    if (this.viewMode === 'month') {
-      this.date.setMonth(this.date.getMonth() - 1);
-    } else {
-      this.date.setDate(this.date.getDate() - 7);
-    }
-    this.initializeCalendar();
-  }
-
-  next() {
-    if (this.viewMode === 'month') {
-      this.date.setMonth(this.date.getMonth() + 1);
-    } else {
-      this.date.setDate(this.date.getDate() + 7);
-    }
-    this.initializeCalendar();
+  private updateCurrentWeekRange() {
+    const dt = new Date(this.date);
+    const day = dt.getDay() || 7;
+    const monday = new Date(dt.setDate(dt.getDate() - (day - 1)));
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    this.currentWeekRange = `${monday.toLocaleDateString('es-ES')} - ${sunday.toLocaleDateString('es-ES')}`;
   }
 
   private createCalendarDays() {
@@ -162,7 +114,13 @@ showEventModal(ev?: Events, i?: number, j?: number) {
     const blankDays = (jsDay + 6) % 7;
 
     for (let i = 0; i < blankDays; i++) {
-      this.calendarDays.push({ day: null, currentDay: false, currentMonth: false, date: null!, events: [] });
+      this.calendarDays.push({
+        day: null,
+        currentDay: false,
+        currentMonth: false,
+        date: null!,
+        events: []
+      });
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
@@ -175,15 +133,6 @@ showEventModal(ev?: Events, i?: number, j?: number) {
         events: this.getEventsForDate(date)
       });
     }
-  }
-
-  private updateCurrentWeekRange() {
-    const dt = new Date(this.date);
-    const day = dt.getDay() || 7;
-    const monday = new Date(dt.setDate(dt.getDate() - (day - 1)));
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    this.currentWeekRange = `${monday.toLocaleDateString('es-ES')} - ${sunday.toLocaleDateString('es-ES')}`;
   }
 
   private createWeekDays() {
@@ -209,6 +158,24 @@ showEventModal(ev?: Events, i?: number, j?: number) {
     return this.allEvents.filter(ev =>
       new Date(ev.date).toDateString() === date.toDateString()
     );
+  }
+
+  previous() {
+    if (this.viewMode === 'month') {
+      this.date.setMonth(this.date.getMonth() - 1);
+    } else {
+      this.date.setDate(this.date.getDate() - 7);
+    }
+    this.initializeCalendar();
+  }
+
+  next() {
+    if (this.viewMode === 'month') {
+      this.date.setMonth(this.date.getMonth() + 1);
+    } else {
+      this.date.setDate(this.date.getDate() + 7);
+    }
+    this.initializeCalendar();
   }
 
   formatDate(date: Date | string) {

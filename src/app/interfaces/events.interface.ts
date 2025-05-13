@@ -1,10 +1,12 @@
+
 export interface Events {
-  name: string,
-  type: string,
-  patientName: string,          // nombre del paciente
-  patientDni: string,
-  id: string,
-  date: Date,
-  background: string,
-  color: string
+  id: string;
+  name: string;
+  patientName: string;
+  patientDni: string;
+  patientEmail: string;
+  type: string;
+  date: Date;
+  background: string;
+  color: string;
 }

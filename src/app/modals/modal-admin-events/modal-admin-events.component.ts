@@ -14,6 +14,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { NgxColorsModule } from 'ngx-colors';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
+import { Timestamp } from 'firebase/firestore';
 
 @Component({
   selector: 'app-modal-events',
@@ -41,7 +42,7 @@ export class ModalAdminEventsComponent implements OnInit {
   date = new Date();
   minDate = new Date();
 
-  pacientes: { dni: string; nombre: string }[] = [];
+  pacientes: { dni: string; nombre: string; email: string }[] = [];
   especialidades: string[] = [
     'Odontólogo',
     'Odontopediatra',
@@ -81,7 +82,6 @@ export class ModalAdminEventsComponent implements OnInit {
     });
 
     await this.loadPacientes();
-
     if (this.data?.patientDni) {
       const selectedPaciente = this.pacientes.find(p => p.dni === this.data!.patientDni);
       if (selectedPaciente) {
@@ -90,44 +90,38 @@ export class ModalAdminEventsComponent implements OnInit {
     }
 
     this.generateAvailableHours();
-}
+  }
 
+  async loadPacientes() {
+    const db = getFirestore();
+    const usersSnapshot = await getDocs(collection(db, 'users'));
+    this.pacientes = usersSnapshot.docs.map(doc => {
+      const data = doc.data();
+      const nombreCompleto = data['nombreCompleto']?.trim() || '';
+      const primerNombre = nombreCompleto.split(' ')[0];
 
-async loadPacientes() {
-  const db = getFirestore();
-  const usersSnapshot = await getDocs(collection(db, 'users'));
-  this.pacientes = usersSnapshot.docs.map(doc => {
-    const data = doc.data();
-    const nombreCompleto = data['nombreCompleto']?.trim() || '';
-    const primerNombre = nombreCompleto.split(' ')[0];
-
-    return {
-      dni: data['dni'],
-      nombre: primerNombre
-    };
-  });
-}
+      return {
+        dni: data['dni'],
+        nombre: primerNombre,
+        email: data['correo'] || ''
+      };
+    });
+  }
 
   generateAvailableHours() {
     const hours: string[] = [];
-
-    // Mañana: 10:00 - 14:00
     for (let h = 10; h < 14; h++) {
       hours.push(`${h.toString().padStart(2, '0')}:00`);
     }
-
-    // Tarde: 16:00 - 20:00
     for (let h = 16; h < 20; h++) {
       hours.push(`${h.toString().padStart(2, '0')}:00`);
     }
-
     this.availableHours = hours;
   }
 
   save() {
     if (this.form.valid) {
       const values = this.form.value;
-
       const eventDate = new Date(values.date);
       eventDate.setHours(parseInt(values.hora), 0, 0, 0);
 
@@ -136,14 +130,14 @@ async loadPacientes() {
         name: values.nombreEvento,
         patientName: values.paciente.nombre,
         patientDni: values.paciente.dni,
+        patientEmail: values.paciente.email,
         type: values.especialidad,
         date: eventDate,
         background: values.background,
         color: values.color
       };
 
-      this.modalSvc.setEvent(event);
-      this.dialogRef.close(event);
+      this.dialogRef.close({ action: this.data ? 'modified' : 'added', event });
     }
   }
 
@@ -152,7 +146,6 @@ async loadPacientes() {
   }
 
   delete() {
-    this.dialogRef.close('deleted');
+    this.dialogRef.close({ action: 'deleted', event: this.data });
   }
-
 }

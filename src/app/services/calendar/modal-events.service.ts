@@ -1,13 +1,28 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Events } from '../../interfaces/events.interface';
+import {
+  Firestore,
+  doc,
+  setDoc,
+  deleteDoc,
+  collection,
+  collectionData
+} from '@angular/fire/firestore';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ModalEventsService {
-  private modalData = signal<Events | null>(null);
   private dialog = inject(MatDialog);
-  private storageKey = 'calendarEvents';
-  dialogRef: MatDialogRef<any> | null = null;  // Guardar dialogRef
+  private firestore = inject(Firestore);
+  dialogRef: MatDialogRef<any> | null = null;
+
+  private eventsSubject = new BehaviorSubject<Events[]>([]);
+  events$ = this.eventsSubject.asObservable();
+
+  constructor() {
+    this.loadEventsFromFirestore(); // Cargar eventos al inicializar el servicio
+  }
 
   openModal(component: any, data?: Events): void {
     this.dialogRef = this.dialog.open(component, {
@@ -15,51 +30,33 @@ export class ModalEventsService {
       width: '70vw'
     });
 
-    // Suscripción al cierre del modal
-    this.dialogRef.afterClosed().subscribe(result => {
+    this.dialogRef.afterClosed().subscribe(async result => {
       if (result) {
-        // Si el evento es nuevo o modificado
+        const event = result.event;
+
         if (result.action === 'modified' || result.action === 'added') {
-          this.setEvent(result.event);
+          await this.saveEventToFirestore(event);
         } else if (result.action === 'deleted') {
-          // Si se eliminó el evento
-          this.deleteEvent(result.event.id);
+          await this.deleteEventFromFirestore(event.id);
         }
-        this.saveEvents();
       }
     });
   }
 
-  get getEvent(): Events | null {
-    return this.modalData();
+  private loadEventsFromFirestore() {
+    const eventsCollection = collection(this.firestore, 'events');
+    collectionData(eventsCollection, { idField: 'id' }).subscribe(data => {
+      this.eventsSubject.next(data as Events[]);
+    });
   }
 
-  setEvent(event: Events) {
-    this.modalData.set(event);
-    this.saveEvents();
+  async saveEventToFirestore(event: Events): Promise<void> {
+    const eventRef = doc(this.firestore, 'events', event.id);
+    await setDoc(eventRef, event, { merge: true });
   }
 
-  getAllEvents(): Events[] {
-    return JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-  }
-
-  saveEvents() {
-    const allEvents = this.getAllEvents();
-    const updatedEvent = this.getEvent;
-    if (updatedEvent) {
-      const index = allEvents.findIndex(e => e.id === updatedEvent.id);
-      if (index !== -1) {
-        allEvents[index] = updatedEvent; // Modificamos el evento existente
-      } else {
-        allEvents.push(updatedEvent); // Agregamos un nuevo evento
-      }
-    }
-    localStorage.setItem(this.storageKey, JSON.stringify(allEvents));
-  }
-
-  deleteEvent(eventId: string) {
-    let events = this.getAllEvents();
-    events = events.filter(e => e.id !== eventId); // Filtramos el evento a eliminar
-    localStorage.setItem(this.storageKey, JSON.stringify(events));
+  async deleteEventFromFirestore(eventId: string): Promise<void> {
+    const eventRef = doc(this.firestore, 'events', eventId);
+    await deleteDoc(eventRef);
   }
 }
