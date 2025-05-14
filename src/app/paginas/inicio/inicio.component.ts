@@ -18,9 +18,9 @@ export class InicioComponent {
 
   logout(){
     this.authService.logout()
-    .then(resp =>{
-      this.router.navigate(['/login']);
-    })
-    .catch(error => console.log(error))
+      .then(() => {
+        this.router.navigate(['/login']);
+      })
+      .catch(error => console.log(error));
   }
 }

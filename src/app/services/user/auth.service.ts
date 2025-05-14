@@ -24,11 +24,11 @@ export class AuthService {
   private auth = inject(Auth); // Inyección de Auth
   private firestore = inject(Firestore); // Inyección de Firestore
 
-  private currentEmail: string | null = null;
+private currentEmail: string | null = null;
 
   constructor() {}
 
-  setCurrentEmail(email: string) {
+  setCurrentEmail(email: string | null) {
     this.currentEmail = email;
   }
 
@@ -88,8 +88,11 @@ export class AuthService {
   }
 
   logout() {
-    return signOut(this.auth);
+    return signOut(this.auth).then(() => {
+      this.setCurrentEmail(null);
+    });
   }
+
 
   isAuthenticated(): boolean {
     return this.auth.currentUser !== null;

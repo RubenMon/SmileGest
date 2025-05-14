@@ -13,6 +13,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { getAuth } from 'firebase/auth';
 import { ModalAdminEventsComponent } from '../../modals/modal-admin-events/modal-admin-events.component';
 import { ModalUserEventsComponent } from '../../modals/modal-user-events/modal-user-events.component';
+import { AuthService } from '../../services/user/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-calendar',
@@ -31,6 +33,8 @@ import { ModalUserEventsComponent } from '../../modals/modal-user-events/modal-u
   styleUrls: ['./calendar.component.css']
 })
 export class CalendarComponent implements OnInit {
+  authService = inject(AuthService);
+  router = inject(Router);
   private modalSvc = inject(ModalEventsService);
   private dialog = inject(MatDialog);
 
@@ -177,4 +181,16 @@ export class CalendarComponent implements OnInit {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
   }
+
+  logout() {
+    this.authService.logout()  // Cierra sesión
+      .then(() => {
+        this.router.navigate(['/login']);
+        window.location.reload();
+      })
+      .catch(error => {
+        console.error("Error al cerrar sesión:", error);
+      });
+  }
+
 }
