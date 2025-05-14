@@ -1,1 +1,117 @@
-<p>modal-user-events works!</p>
+<mat-dialog-content class="modal-event">
+  <form [formGroup]="form" class="modal-event__form">
+    <h3 class="modal-event__title">Crear una cita</h3>
+
+    <div class="modal-event__container">
+      <!-- Nombre del Evento -->
+      <mat-form-field appearance="outline" class="modal-event__field">
+        <mat-label>Nombre del Evento</mat-label>
+        <input
+          matInput
+          formControlName="nombreEvento"
+          placeholder="Ej: Control mensual"
+        />
+      </mat-form-field>
+
+      <!-- Especialidad -->
+      <mat-form-field appearance="outline" class="modal-event__field">
+        <mat-label>Especialidad</mat-label>
+        <mat-select formControlName="especialidad">
+          <mat-option
+            *ngFor="let esp of especialidades"
+            [value]="esp"
+          >
+            {{ esp }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Fecha -->
+      <mat-form-field appearance="outline" class="modal-event__field">
+        <mat-label>Fecha</mat-label>
+        <input
+          matInput
+          [matDatepicker]="picker"
+          formControlName="date"
+          [min]="minDate"
+        />
+        <mat-hint>DD/MM/YYYY</mat-hint>
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+
+      <!-- Hora -->
+      <mat-form-field appearance="outline" class="modal-event__field">
+        <mat-label>Hora</mat-label>
+        <mat-select formControlName="hora">
+          <mat-option
+            *ngFor="let hour of availableHours"
+            [value]="hour"
+          >
+            {{ hour }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Colores -->
+      <section class="modal-event__colors">
+        <div class="modal-event__color">
+          <mat-label>Color de fondo</mat-label>
+          <ngx-colors
+            ngx-colors-trigger
+            formControlName="background"
+            [format]="'hex'"
+          ></ngx-colors>
+        </div>
+        <div class="modal-event__color">
+          <mat-label>Color del texto</mat-label>
+          <ngx-colors
+            ngx-colors-trigger
+            formControlName="color"
+            [format]="'hex'"
+          ></ngx-colors>
+        </div>
+      </section>
+    </div>
+  </form>
+
+  <!-- Previsualización -->
+  <section class="modal-event__preview">
+    <button
+      class="modal-event__event"
+      [matTooltip]="form.value.especialidad + ' - ' + form.value.hora"
+      [ngStyle]="{
+        'background-color': form.value.background,
+        color: form.value.color
+      }"
+    >
+      <span class="modal-event__icon-and-text">
+        <i class="bx bx-user-pin"></i>
+        <p>
+          {{
+            form.value.nombreEvento +
+              ' - ' +
+              currentUser?.nombre +
+              ' - ' +
+              currentUser?.dni
+          }}
+        </p>
+      </span>
+    </button>
+  </section>
+</mat-dialog-content>
+
+<mat-dialog-actions class="modal-event__actions">
+  <div class="modal-event__buttons">
+    <button mat-button (click)="cancelar()">Cancelar</button>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="save()"
+      [disabled]="form.invalid"
+    >
+      Guardar
+    </button>
+    <button mat-button (click)="delete()">Eliminar</button>
+  </div>
+</mat-dialog-actions>

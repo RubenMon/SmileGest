@@ -1,4 +1,11 @@
 <section class="calendar">
+    <!-- Botón para cerrar sesión -->
+  <div class="calendar__logout">
+    <button mat-raised-button color="warn" (click)="logout()">
+      Cerrar sesión
+    </button>
+  </div>
+
   <div class="calendar__add-top">
     <button mat-raised-button color="primary" (click)="showEventModal()">
       Nuevo evento

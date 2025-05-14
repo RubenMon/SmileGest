@@ -1,57 +1,50 @@
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
+import { Auth } from '@angular/fire/auth'; // Cambiado a la importación moderna
+import { Firestore } from '@angular/fire/firestore'; // Cambiado a la importación moderna
 import {
   createUserWithEmailAndPassword,
-  getAuth,
-  GoogleAuthProvider,
   signInWithEmailAndPassword,
   signInWithPopup,
+  GoogleAuthProvider,
   signOut
 } from 'firebase/auth';
 import {
-  getFirestore,
   doc,
   setDoc,
-  getDocs,
   query,
   where,
-  collection
+  collection,
+  getDocs
 } from 'firebase/firestore';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  // Propiedad para almacenar el email del usuario actual
-  private currentEmail: string | null = null;
+  private auth = inject(Auth); // Inyección de Auth
+  private firestore = inject(Firestore); // Inyección de Firestore
+
+private currentEmail: string | null = null;
 
   constructor() {}
 
-  // Métodos para gestionar el email actual
-  setCurrentEmail(email: string) {
+  setCurrentEmail(email: string | null) {
     this.currentEmail = email;
   }
 
   getCurrentEmail(): string | null {
-    const user = getAuth().currentUser;
+    const user = this.auth.currentUser;
     return user?.email || null;
   }
 
-
-  getAuth() {
-    return getAuth();
-  }
-
+  // Métodos de autenticación
   register(usuario: any) {
-    const auth = getAuth();
-    const db = getFirestore();
-
-    return createUserWithEmailAndPassword(auth, usuario.email, usuario.password)
+    return createUserWithEmailAndPassword(this.auth, usuario.email, usuario.password)
       .then((userCredential) => {
-        // Guardar email tras registro
         this.setCurrentEmail(usuario.email);
 
         const uid = userCredential.user.uid;
-        const userRef = doc(db, 'users', uid);
+        const userRef = doc(this.firestore, 'users', uid);
         return setDoc(userRef, {
           email: usuario.email,
           dni: usuario.dni,
@@ -61,52 +54,48 @@ export class AuthService {
   }
 
   login(usuario: any) {
-    return signInWithEmailAndPassword(getAuth(), usuario.email, usuario.password)
+    return signInWithEmailAndPassword(this.auth, usuario.email, usuario.password)
       .then(result => {
-        // Guardar email tras login clásico
         this.setCurrentEmail(result.user.email!);
         return result;
       });
   }
 
   loginWithGoogleOnly() {
-    const auth = getAuth();
     const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider)
+    return signInWithPopup(this.auth, provider)
       .then(result => {
-        // Guardar email tras login con Google
-        const email = result.user.email!;
-        this.setCurrentEmail(email);
+        this.setCurrentEmail(result.user.email!);
         return result;
       });
   }
 
   async userExistsInFirestore(email: string): Promise<boolean> {
-    const db = getFirestore();
-    const q = query(collection(db, 'users'), where('email', '==', email));
+    const q = query(collection(this.firestore, 'users'), where('email', '==', email));
     const snapshot = await getDocs(q);
     return !snapshot.empty;
   }
 
   async dniExistsInFirestore(dni: string): Promise<boolean> {
-    const db = getFirestore();
-    const q = query(collection(db, 'users'), where('dni', '==', dni));
+    const q = query(collection(this.firestore, 'users'), where('dni', '==', dni));
     const snapshot = await getDocs(q);
     return !snapshot.empty;
   }
 
   async saveUserData(uid: string, email: string, dni: string, nombreCompleto: string) {
-    const db = getFirestore();
-    const userRef = doc(db, 'users', uid);
+    const userRef = doc(this.firestore, 'users', uid);
     return setDoc(userRef, { email, dni, nombreCompleto });
   }
 
   logout() {
-    return signOut(getAuth());
+    return signOut(this.auth).then(() => {
+      this.setCurrentEmail(null);
+    });
   }
 
+
   isAuthenticated(): boolean {
-    return getAuth().currentUser !== null;
+    return this.auth.currentUser !== null;
   }
 
   validateDniLetter(dni: string): boolean {
