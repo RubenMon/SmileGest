@@ -1,10 +1,11 @@
+// src/app/components/calendar/calendar.component.ts
+
 import { Component, OnInit, inject } from '@angular/core';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { Calendar } from '../../interfaces/calendar.interface';
 import { Events } from '../../interfaces/events.interface';
-import { DatePipe, NgClass, NgStyle, NgIf, NgFor } from '@angular/common';
+import { NgClass, NgStyle, NgIf, NgFor } from '@angular/common';
 import { ModalEventsService } from '../../services/calendar/modal-events.service';
-import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { DeleteComponent } from '../../modals/delete/delete.component';
@@ -70,6 +71,7 @@ export class CalendarComponent implements OnInit {
 
   private subscribeToEvents() {
     this.modalSvc.events$.subscribe(events => {
+      console.log('Eventos recibidos:', events);
       this.allEvents = events;
       this.initializeCalendar();
     });
@@ -114,13 +116,7 @@ export class CalendarComponent implements OnInit {
     const blankDays = (jsDay + 6) % 7;
 
     for (let i = 0; i < blankDays; i++) {
-      this.calendarDays.push({
-        day: null,
-        currentDay: false,
-        currentMonth: false,
-        date: null!,
-        events: []
-      });
+      this.calendarDays.push({ day: null, currentDay: false, currentMonth: false, date: null!, events: [] });
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
@@ -155,9 +151,7 @@ export class CalendarComponent implements OnInit {
   }
 
   private getEventsForDate(date: Date) {
-    return this.allEvents.filter(ev =>
-      new Date(ev.date).toDateString() === date.toDateString()
-    );
+    return this.allEvents.filter(ev => ev.date.toDateString() === date.toDateString());
   }
 
   previous() {
