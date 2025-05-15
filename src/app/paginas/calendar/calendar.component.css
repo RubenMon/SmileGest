@@ -2,7 +2,7 @@
   background: #ffffff;
   max-width: 90%;
   margin: 1rem auto;
-  padding: 0.8rem; /* Reducción del padding */
+  padding: 0.8rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
   font-family: 'Roboto', sans-serif;
@@ -14,53 +14,54 @@
   overflow: hidden;
 }
 
-.calendar__add-top {
-  text-align: center;
-  margin-bottom: 0.3rem; /* Reducir margen */
-}
-.calendar__add-top button {
-  font-size: 0.8rem; /* Reducir tamaño de fuente */
-  padding: 0.3rem 0.8rem; /* Reducir padding */
+.calendar__top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.calendar__controls {
-  text-align: center;
-  margin-bottom: 0.5rem; /* Reducir margen */
+.calendar__views {
+  display: flex;
+  gap: 0.5rem;
 }
-.calendar__controls button {
-  margin: 0 0.2rem; /* Reducir margen */
-  font-size: 0.8rem; /* Reducir tamaño de fuente */
+
+.calendar__views button {
+  font-size: 0.8rem;
 }
 
 .calendar__navigation {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.8rem; /* Reducir espacio entre elementos */
-  margin-bottom: 0.5rem; /* Reducir margen */
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
   background: #fff;
 }
 .calendar__navigation span {
   font-weight: 500;
   flex: 1;
   text-align: center;
-  font-size: 0.85rem; /* Reducir tamaño de fuente */
+  font-size: 0.85rem;
 }
 
 .calendar__grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 0.5px; /* Reducir el gap */
+  gap: 0.5px;
   background: #e0e0e0;
   border-radius: 4px;
+  margin-top: 0;
 }
 
 .calendar__day-name {
   background: #f1f3f4;
-  padding: 0.4rem 0; /* Reducir padding */
+  padding: 0.6rem 0;
   text-align: center;
-  font-size: 0.75rem; /* Reducir tamaño de fuente */
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 600;
   border-bottom: 1px solid #e0e0e0;
 }
 
@@ -69,8 +70,8 @@
   display: flex;
   flex-direction: column;
   padding: 0.3rem;
-  min-height: 70px; /* Reducir altura */
-  max-height: 70px; /* Reducir altura */
+  min-height: 75px;
+  max-height: 75px;
   border-radius: 6px;
   border: 1px solid #dcdcdc;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -86,10 +87,8 @@
 }
 
 .calendar__day-header {
-  font-size: 0.75rem; /* Reducir tamaño de fuente */
-  font-weight: 500;
-  color: #5f6368;
-  margin-bottom: 0.1rem; /* Reducir margen */
+  font-size: 0.7rem;
+  color: #3c4043;
 }
 
 .calendar__day--current-day {
@@ -101,12 +100,12 @@
   flex-direction: column;
   overflow-y: auto;
   max-height: 100%;
-  padding-right: 3px; /* Reducir padding */
-  gap: 3px; /* Reducir gap */
+  padding-right: 3px;
+  gap: 3px;
 }
 
 .calendar__events::-webkit-scrollbar {
-  width: 5px; /* Reducir el ancho de la barra de desplazamiento */
+  width: 5px;
 }
 .calendar__events::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.2);
@@ -116,11 +115,11 @@
 .calendar__event {
   background: #e3f2fd;
   border: 1px solid #90caf9;
-  padding: 0.2rem 0.3rem; /* Reducir padding */
+  padding: 0.2rem 0.3rem;
   border-radius: 4px;
-  font-size: 0.7rem; /* Reducir tamaño de fuente */
-  height: 20px; /* Reducir altura */
-  line-height: 20px; /* Reducir altura de línea */
+  font-size: 0.6rem;
+  height: 18px;
+  line-height: 20px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   display: flex;
@@ -129,4 +128,69 @@
 
 .calendar__event:hover {
   filter: brightness(0.95);
+}
+
+/* Estilos base (ya los tienes definidos) */
+/* ... aquí va tu CSS actual ... */
+
+/* Estilos para pantallas grandes (27 pulgadas o más) */
+@media screen and (min-width: 1800px) {
+  .calendar {
+    max-width: 1750px;
+    padding: 1.2rem;
+    font-size: 1.1rem;
+  }
+
+  .calendar__top-bar {
+    margin-bottom: 1rem;
+    gap: 1rem;
+  }
+
+  .calendar__views button {
+    font-size: 1rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .calendar__navigation {
+    gap: 1.2rem;
+  }
+
+  .calendar__navigation span {
+    font-size: 1.1rem;
+  }
+
+  .calendar__day-name {
+    font-size: 1rem;
+    padding: 1rem 0;
+  }
+
+  .calendar__day {
+    min-height: 90px;
+    max-height: 90px;
+    padding: 0.6rem;
+  }
+
+  .calendar__day-header {
+    font-size: 0.85rem;
+  }
+
+  .calendar__event {
+    font-size: 0.75rem;
+    height: 21px;
+    line-height: 24px;
+    padding: 0.3rem 0.4rem;
+  }
+
+  .calendar__events {
+    gap: 5px;
+    padding-right: 4px;
+  }
+
+  .calendar__events::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .calendar__events::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.25);
+  }
 }

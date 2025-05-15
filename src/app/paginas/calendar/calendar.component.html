@@ -1,22 +1,21 @@
 <section class="calendar">
-    <!-- Botón para cerrar sesión -->
-  <div class="calendar__logout">
+  <!-- Barra superior con los tres botones -->
+  <div class="calendar__top-bar">
     <button mat-raised-button color="warn" (click)="logout()">
       Cerrar sesión
     </button>
-  </div>
 
-  <div class="calendar__add-top">
     <button mat-raised-button color="primary" (click)="showEventModal()">
       Nuevo evento
     </button>
+
+    <div class="calendar__views">
+      <button mat-button (click)="toggleView('month')">Vista Mes</button>
+      <button mat-button (click)="toggleView('week')">Vista Semana</button>
+    </div>
   </div>
 
-  <div class="calendar__controls">
-    <button mat-button (click)="toggleView('month')">Vista Mes</button>
-    <button mat-button (click)="toggleView('week')">Vista Semana</button>
-  </div>
-
+  <!-- Navegación del calendario -->
   <div class="calendar__navigation">
     <button mat-icon-button (click)="previous()">
       <mat-icon>chevron_left</mat-icon>
@@ -28,6 +27,7 @@
     </button>
   </div>
 
+  <!-- Vista mensual -->
   <div *ngIf="viewMode==='month'" class="calendar__grid">
     <span class="calendar__day-name" *ngFor="let n of nameDay">{{ n }}</span>
     <div
@@ -43,12 +43,13 @@
           (click)="showEventModal(ev, i, j)"
           [ngStyle]="{ 'background-color': ev.background, 'color': ev.color }"
         >
-        {{ ev.name }} - {{ ev.patientName }} - {{ ev.patientDni }}
+          {{ ev.name }} - {{ ev.patientName }} - {{ ev.patientDni }}
         </button>
       </div>
     </div>
   </div>
 
+  <!-- Vista semanal -->
   <div *ngIf="viewMode==='week'" class="calendar__grid">
     <span class="calendar__day-name" *ngFor="let n of nameDay">{{ n }}</span>
     <div
