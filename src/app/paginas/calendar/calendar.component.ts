@@ -1,5 +1,3 @@
-// src/app/components/calendar/calendar.component.ts
-
 import { Component, OnInit, inject } from '@angular/core';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { Calendar } from '../../interfaces/calendar.interface';
@@ -75,7 +73,6 @@ export class CalendarComponent implements OnInit {
 
   private subscribeToEvents() {
     this.modalSvc.events$.subscribe(events => {
-      console.log('Eventos recibidos:', events);
       this.allEvents = events;
       this.initializeCalendar();
     });
@@ -183,7 +180,7 @@ export class CalendarComponent implements OnInit {
   }
 
   logout() {
-    this.authService.logout()  // Cierra sesión
+    this.authService.logout()
       .then(() => {
         this.router.navigate(['/login']);
         window.location.reload();
@@ -193,4 +190,7 @@ export class CalendarComponent implements OnInit {
       });
   }
 
+  verUsuarios() {
+    this.router.navigate(['/usuarios']);
+  }
 }

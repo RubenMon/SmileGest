@@ -1,8 +1,12 @@
 <section class="calendar">
-  <!-- Barra superior con los tres botones -->
+  <!-- Barra superior con los botones -->
   <div class="calendar__top-bar">
     <button mat-raised-button color="warn" (click)="logout()">
       Cerrar sesión
+    </button>
+
+    <button mat-raised-button color="accent" (click)="verUsuarios()">
+      Ver usuarios
     </button>
 
     <button mat-raised-button color="primary" (click)="showEventModal()">

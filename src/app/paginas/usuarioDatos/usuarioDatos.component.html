@@ -1,0 +1,27 @@
+<div class="user-container">
+  <h2>{{ editMode ? 'Editar Usuario' : 'Nuevo Usuario' }}</h2>
+
+  <form [formGroup]="form" (ngSubmit)="saveUser()">
+    <mat-form-field appearance="fill">
+      <mat-label>DNI</mat-label>
+      <input matInput formControlName="dni" [readonly]="editMode" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Nombre Completo</mat-label>
+      <input matInput formControlName="nombreCompleto" />
+    </mat-form-field>
+
+    <button mat-flat-button type="submit">
+      {{ editMode ? 'Guardar Cambios' : 'Crear Usuario' }}
+    </button>
+  </form>
+
+  <button mat-flat-button color="primary" (click)="newUser()">Nuevo</button>
+  <button mat-flat-button color="warn" *ngIf="editMode" (click)="deleteUser()">Eliminar</button>
+</div>

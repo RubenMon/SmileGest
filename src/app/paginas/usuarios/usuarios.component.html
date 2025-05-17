@@ -1,0 +1,8 @@
+<div class="usuarios-container">
+  <h2>Usuarios Registrados</h2>
+
+  <mat-card *ngFor="let user of usuarios$ | async" (click)="verUsuario(user.dni)" class="usuario-card">
+    <h3>{{ user.nombreCompleto }}</h3>
+    <p>{{ user.email }}</p>
+  </mat-card>
+</div>
