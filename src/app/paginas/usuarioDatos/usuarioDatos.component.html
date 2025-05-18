@@ -1,5 +1,5 @@
 <div class="user-container">
-  <h2>{{ editMode ? 'Editar Usuario' : 'Nuevo Usuario' }}</h2>
+  <h2>"Editar Usuario"</h2>
 
   <form [formGroup]="form" (ngSubmit)="saveUser()">
     <mat-form-field appearance="fill">
@@ -21,7 +21,4 @@
       {{ editMode ? 'Guardar Cambios' : 'Crear Usuario' }}
     </button>
   </form>
-
-  <button mat-flat-button color="primary" (click)="newUser()">Nuevo</button>
-  <button mat-flat-button color="warn" *ngIf="editMode" (click)="deleteUser()">Eliminar</button>
 </div>
