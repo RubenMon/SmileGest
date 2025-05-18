@@ -64,8 +64,13 @@ export class UsuariosComponent implements OnInit {
 
   private normalizar(texto: string): string {
     return texto
-      .normalize('NFD')                   // separa tildes
-      .replace(/[\u0300-\u036f]/g, '')   // elimina tildes
-      .toLowerCase();                    // ignora mayúsculas
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
   }
+
+  volverAlCalendario() {
+  this.router.navigate(['/calendario']);
+  }
+
 }
