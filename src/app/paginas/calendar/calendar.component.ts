@@ -45,9 +45,14 @@ export class CalendarComponent implements OnInit {
   viewMode: 'month' | 'week' = 'month';
   private date = new Date();
 
+  isAdmin: boolean = false;
+
   ngOnInit(): void {
     this.subscribeToEvents();
     this.initializeCalendar();
+
+    const user = getAuth().currentUser;
+    this.isAdmin = user?.email === 'administracionclinica@gmail.com';
   }
 
   toggleView(mode: 'month' | 'week') {

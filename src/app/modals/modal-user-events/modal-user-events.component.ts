@@ -1,5 +1,4 @@
-// modal-user-events.component.ts
-import { Component, OnInit, OnDestroy,Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { provideNativeDateAdapter } from '@angular/material/core';
@@ -7,7 +6,6 @@ import { CommonModule } from '@angular/common';
 import { getFirestore, query, where, collection, getDocs } from 'firebase/firestore';
 import { AuthService } from '../../services/user/auth.service';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { ModalEventsService } from '../../services/calendar/modal-events.service';
 import { Events } from '../../interfaces/events.interface';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -18,6 +16,7 @@ import { NgxColorsModule } from 'ngx-colors';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { Subscription } from 'rxjs';
+import { collectionData, Timestamp } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-modal-user-events',
@@ -61,7 +60,6 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
   constructor(
     public dialogRef: MatDialogRef<ModalUserEventsComponent>,
     private fb: FormBuilder,
-    private modalSvc: ModalEventsService,
     private authService: AuthService,
     @Inject(MAT_DIALOG_DATA) public data: Events
   ) {
@@ -78,16 +76,8 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     await this.loadCurrentUser();
+    this.loadAllEvents();  // Nueva lógica para obtener todos los eventos
 
-    // Suscripción a eventos
-    this.subs.add(
-      this.modalSvc.events$.subscribe(evts => {
-        this.allEvents = evts;
-        this.updateAvailableHours();
-      })
-    );
-
-    // Recalcular horas cuando cambie la fecha
     this.subs.add(
       this.form.get('date')!.valueChanges.subscribe(() => {
         this.updateAvailableHours();
@@ -119,6 +109,27 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
     }
   }
 
+  private loadAllEvents() {
+    const db = getFirestore();
+    const eventsCollection = collection(db, 'events');
+    const eventsData = collectionData(eventsCollection, { idField: 'id' });
+
+    this.subs.add(eventsData.subscribe((rawEvents: any[]) => {
+      this.allEvents = rawEvents.map(e => ({
+        id: e.id,
+        name: e.name,
+        patientName: e.patientName,
+        patientDni: e.patientDni,
+        patientEmail: e.patientEmail,
+        type: e.type,
+        background: e.background,
+        color: e.color,
+        date: (e.date as Timestamp).toDate(),
+      }));
+      this.updateAvailableHours();
+    }));
+  }
+
   private baseHours(): string[] {
     const hrs: string[] = [];
     for (let h = 10; h < 14; h++) hrs.push(`${h.toString().padStart(2, '0')}:00`);
@@ -129,9 +140,11 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
   private updateAvailableHours() {
     const date: Date = this.form.get('date')!.value;
     const dayStr = date.toDateString();
+
     const occupied = this.allEvents
       .filter(ev => ev.date.toDateString() === dayStr)
       .map(ev => ev.date.getHours().toString().padStart(2, '0') + ':00');
+
     this.availableHours = this.baseHours().filter(h => !occupied.includes(h));
   }
 
