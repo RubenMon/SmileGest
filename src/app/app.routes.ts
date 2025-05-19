@@ -26,13 +26,11 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent),
   },
   {
-  path: 'usuarios',
-  loadComponent: () => import('./paginas/usuarios/usuarios.component').then(m => m.UsuariosComponent)
+    path: 'usuarios',
+    loadComponent: () => import('./paginas/usuarios/usuarios.component').then(m => m.UsuariosComponent)
   },
   {
     path: 'usuarios/:dni',
-    loadComponent: () => import('./paginas/usuarioDatos/usuarioDatos.component').then(m => m.UsuarioDatosComponent)
+    loadComponent: () => import('./paginas/usuarioDatos/usuarioDatos.component').then(m => m.UsuarioDatosComponent),
   }
-
-
 ];
