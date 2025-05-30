@@ -5,12 +5,7 @@
       Cerrar sesión
     </button>
 
-    <button
-      *ngIf="isAdmin"
-      mat-raised-button
-      color="accent"
-      (click)="verUsuarios()"
-    >
+    <button *ngIf="isAdmin" mat-raised-button color="accent" (click)="verUsuarios()">
       Ver usuarios
     </button>
 
@@ -42,7 +37,7 @@
     <div
       class="calendar__day"
       *ngFor="let day of calendarDays; let i = index"
-      [ngClass]="{'calendar__day--current-day': day.currentDay}"
+      [ngClass]="{ 'calendar__day--current-day': day.currentDay }"
     >
       <div class="calendar__day-header"><span>{{ day.day }}</span></div>
       <div class="calendar__events">
@@ -59,23 +54,26 @@
   </div>
 
   <!-- Vista semanal -->
-  <div *ngIf="viewMode==='week'" class="calendar__grid">
+  <div *ngIf="viewMode==='week'" class="calendar__grid week-view">
     <span class="calendar__day-name" *ngFor="let n of nameDay">{{ n }}</span>
     <div
       class="calendar__day"
       *ngFor="let day of weekDays; let i = index"
-      [ngClass]="{'calendar__day--current-day': day.currentDay}"
+      [ngClass]="{ 'calendar__day--current-day': day.currentDay }"
     >
       <div class="calendar__day-header"><span>{{ day.day }}</span></div>
       <div class="calendar__events">
-        <button
-          class="calendar__event"
-          *ngFor="let ev of day.events; let j = index"
-          (click)="showEventModal(ev)"
-          [ngStyle]="{ 'background-color': ev.background, 'color': ev.color }"
-        >
-          {{ ev.name }}
-        </button>
+      <button
+        class="calendar__event_week"
+        *ngFor="let ev of day.events; let j = index"
+        (click)="showEventModal(ev)"
+        [ngStyle]="{ 'background-color': ev.background, 'color': ev.color }"
+      >
+        <div class="calendar__event-content">
+          <div class="event-title">{{ ev.name }}</div>
+          <div class="event-patient">{{ ev.patientName }} - {{ ev.patientDni }}</div>
+        </div>
+      </button>
       </div>
     </div>
   </div>

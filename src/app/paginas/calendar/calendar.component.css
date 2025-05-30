@@ -39,6 +39,7 @@
   margin-bottom: 0.5rem;
   background: #fff;
 }
+
 .calendar__navigation span {
   font-weight: 500;
   flex: 1;
@@ -69,14 +70,18 @@
   display: flex;
   flex-direction: column;
   padding: 0.3rem;
-  min-height: 75px;
-  max-height: 75px;
+  height: 75px;
   border-radius: 6px;
   border: 1px solid #dcdcdc;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
   cursor: pointer;
   overflow: hidden;
+}
+
+.calendar__grid.week-view .calendar__day {
+  min-height: 690px;
+  font-size: 1.2rem;
 }
 
 .calendar__day:hover {
@@ -103,9 +108,50 @@
   gap: 3px;
 }
 
+.calendar__event_week {
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 4px;
+  height: auto;
+  min-height: 60px;
+  padding: 0.4rem 0.6rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  width: 100%;
+}
+
+.calendar__event-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+}
+
+.calendar__event-content .event-title {
+  font-weight: bold;
+  font-size: 1.3rem;
+  line-height: 1.2;
+  display: flex;
+  justify-content: center;
+}
+
+.calendar__event-content .event-patient {
+  font-size: 1.3rem;
+  line-height: 1.1;
+  display: flex;
+  justify-content: center;
+}
+
+
+
 .calendar__events::-webkit-scrollbar {
   width: 5px;
 }
+
 .calendar__events::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
@@ -161,8 +207,7 @@
   }
 
   .calendar__day {
-    min-height: 90px;
-    max-height: 90px;
+    height: 90px;
     padding: 0.6rem;
   }
 

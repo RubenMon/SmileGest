@@ -75,7 +75,7 @@ export class ModalAdminEventsComponent implements OnInit, OnDestroy {
   ) {
     // Inicializar form
     this.form = this.fb.group({
-      nombreEvento: [this.data?.name || '', Validators.required],
+      nombreEvento: [this.data?.name || '', [Validators.required, Validators.pattern(/^.{1,10}$/)]],
       paciente: [null, Validators.required],
       especialidad: [this.data?.type || '', Validators.required],
       id: [this.data?.id || crypto.randomUUID(), Validators.required],
