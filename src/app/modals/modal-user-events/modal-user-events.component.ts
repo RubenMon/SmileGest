@@ -64,7 +64,7 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
     @Inject(MAT_DIALOG_DATA) public data: Events
   ) {
     this.form = this.fb.group({
-      nombreEvento: ['', Validators.required],
+      nombreEvento: ['', [Validators.required, Validators.pattern(/^.{1,10}$/)]],
       especialidad: ['', Validators.required],
       id: [crypto.randomUUID(), Validators.required],
       date: [new Date(), Validators.required],

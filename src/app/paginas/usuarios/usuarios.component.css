@@ -20,7 +20,7 @@
   border: 1px solid #ccc;
 }
 .usuarios-scroll {
-  max-height: 540px;
+  max-height: 650px;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
