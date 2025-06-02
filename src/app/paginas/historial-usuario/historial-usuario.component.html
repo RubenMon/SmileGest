@@ -1,0 +1,40 @@
+<div class="container">
+  <h2>Historial de {{ userName }} (DNI: {{ dni }})</h2>
+
+  <button mat-stroked-button color="accent" (click)="goBack()" class="back-btn">
+    <mat-icon>arrow_back</mat-icon> Volver a Usuario
+  </button>
+
+  <form [formGroup]="form" (ngSubmit)="addHistorial()" class="historial-form">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Descripción</mat-label>
+      <textarea matInput formControlName="descripcion"></textarea>
+      <mat-error *ngIf="form.get('descripcion')?.hasError('required')">
+        La descripción es obligatoria.
+      </mat-error>
+    </mat-form-field>
+
+    <input type="file" (change)="onFileSelected($event)" class="file-input" />
+
+    <button mat-flat-button color="primary" type="submit" [disabled]="isLoading || form.invalid" class="submit-btn">
+      <mat-icon *ngIf="isLoading" class="spin">autorenew</mat-icon>
+      Agregar al Historial
+    </button>
+  </form>
+
+  <div *ngIf="historial.length === 0" class="empty-message">
+    No hay historial disponible.
+  </div>
+
+  <div *ngFor="let item of historial" class="historial-item">
+    <mat-card>
+      <mat-card-title>
+        {{ item.fecha ? (item.fecha | date:'short') : 'Sin fecha' }}
+      </mat-card-title>
+      <mat-card-content>
+        <p>{{ item.descripcion }}</p>
+        <img *ngIf="item.imagenUrl" [src]="item.imagenUrl" width="200" />
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

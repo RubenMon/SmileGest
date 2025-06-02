@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Firestore, doc, getDoc, setDoc, deleteDoc } from '@angular/fire/firestore';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -24,6 +24,7 @@ export class UsuarioDatosComponent implements OnInit {
 
   firestore = inject(Firestore);
   route = inject(ActivatedRoute);
+  router = inject(Router);
 
   form = new FormGroup({
     dni: new FormControl('', Validators.required),
@@ -75,5 +76,12 @@ export class UsuarioDatosComponent implements OnInit {
   newUser() {
     this.form.reset();
     this.editMode = false;
+  }
+
+  goToHistorial() {
+    const dni = this.form.get('dni')?.value;
+    if (dni) {
+      this.router.navigate(['/historial', dni]);
+    }
   }
 }

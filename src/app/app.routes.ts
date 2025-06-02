@@ -32,5 +32,9 @@ export const routes: Routes = [
   {
     path: 'usuarios/:dni',
     loadComponent: () => import('./paginas/usuarioDatos/usuarioDatos.component').then(m => m.UsuarioDatosComponent),
+  },
+  {
+  path: 'historial/:dni',
+  loadComponent: () => import('./paginas/historial-usuario/historial-usuario.component').then(m => m.HistorialUsuarioComponent),
   }
 ];
