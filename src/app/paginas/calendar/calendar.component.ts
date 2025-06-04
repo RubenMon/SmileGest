@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { Calendar } from '../../interfaces/calendar.interface';
 import { Events } from '../../interfaces/events.interface';
-import { NgClass, NgStyle, NgIf, NgFor } from '@angular/common';
+import { NgClass, NgStyle, NgIf, NgFor, CommonModule } from '@angular/common';
 import { ModalEventsService } from '../../services/calendar/modal-events.service';
 import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -18,6 +18,7 @@ import { Router } from '@angular/router';
   selector: 'app-calendar',
   standalone: true,
   imports: [
+    CommonModule,
     MatButton,
     MatIconButton,
     MatIcon,

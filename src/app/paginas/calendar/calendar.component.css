@@ -131,9 +131,30 @@
   width: 100%;
 }
 
+.calendar__event-content-month.no-gap {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  line-height: 1; /* compacta las líneas */
+}
+
+.calendar__event-content-month.no-gap .time,
+.calendar__event-content-month.no-gap .details {
+  margin: 0;
+  padding: 0;
+}
+
+
 .calendar__event-content .event-title {
   font-weight: bold;
   font-size: 1.3rem;
+  line-height: 1.2;
+  display: flex;
+  justify-content: center;
+}
+
+.calendar__event-content .time {
+  font-size: 0.9m;
   line-height: 1.2;
   display: flex;
   justify-content: center;
@@ -145,8 +166,6 @@
   display: flex;
   justify-content: center;
 }
-
-
 
 .calendar__events::-webkit-scrollbar {
   width: 5px;
@@ -160,12 +179,13 @@
 .calendar__event {
   background: #e3f2fd;
   border: 1px solid #90caf9;
-  padding: 0.2rem 0.3rem;
-  border-radius: 4px;
-  font-size: 0.6rem;
-  height: 18px;
-  line-height: 20px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  height: auto;
+  min-height: 32px;
+  line-height: 1.2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   display: flex;
   align-items: center;

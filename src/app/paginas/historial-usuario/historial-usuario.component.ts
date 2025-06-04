@@ -1,8 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { Router } from '@angular/router';
-import { Firestore, collection, getDocs, addDoc, doc, getDoc } from '@angular/fire/firestore';
-import { Storage, ref, uploadBytes, getDownloadURL } from '@angular/fire/storage';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Firestore, collection, getDocs, addDoc, doc, getDoc, query, where } from '@angular/fire/firestore';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -33,7 +31,6 @@ import { HistorialData } from '../../interfaces/historial.interface';
 export class HistorialUsuarioComponent implements OnInit {
 
   firestore = inject(Firestore);
-  storage = inject(Storage);
   route = inject(ActivatedRoute);
   router = inject(Router);
 
@@ -46,7 +43,7 @@ export class HistorialUsuarioComponent implements OnInit {
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
       descripcion: ['', Validators.required],
-      imagen: [null]
+      imagenBase64: [null]
     });
   }
 
@@ -74,14 +71,15 @@ export class HistorialUsuarioComponent implements OnInit {
 
   async loadHistorial() {
     try {
-      const histRef = collection(this.firestore, `users/${this.dni}/historial`);
-      const snapshot = await getDocs(histRef);
+      const histRef = collection(this.firestore, 'historyClinical');
+      const q = query(histRef, where('dni', '==', this.dni));
+      const snapshot = await getDocs(q);
       this.historial = snapshot.docs.map(doc => {
         const data = doc.data() as HistorialData;
         return {
           id: doc.id,
           descripcion: data.descripcion,
-          imagenUrl: data.imagenUrl,
+          imagenUrl: data.imagenBase64,
           fecha: data.fecha?.toDate?.() ?? null
         } as HistorialItem;
       }).sort((a, b) => (b.fecha?.getTime() || 0) - (a.fecha?.getTime() || 0));
@@ -94,7 +92,14 @@ export class HistorialUsuarioComponent implements OnInit {
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
-    this.form.patchValue({ imagen: input.files[0] });
+
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64String = reader.result as string;
+      this.form.patchValue({ imagenBase64: base64String });
+    };
+    reader.readAsDataURL(file);
   }
 
   async addHistorial() {
@@ -104,26 +109,17 @@ export class HistorialUsuarioComponent implements OnInit {
 
     try {
       const descripcion = this.form.value.descripcion;
-      const imagenFile = this.form.value.imagen;
+      const imagenBase64 = this.form.value.imagenBase64 || null;
 
-      let imagenUrl = null;
-
-      if (imagenFile) {
-        const path = `historial/${this.dni}/${Date.now()}_${imagenFile.name}`;
-        const storageRef = ref(this.storage, path);
-        await uploadBytes(storageRef, imagenFile);
-        imagenUrl = await getDownloadURL(storageRef);
-      }
-
-      const histRef = collection(this.firestore, `users/${this.dni}/historial`);
+      const histRef = collection(this.firestore, 'historyClinical');
       await addDoc(histRef, {
+        dni: this.dni,
         descripcion,
         fecha: new Date(),
-        imagenUrl
+        imagenBase64
       });
 
       this.form.reset();
-      this.form.get('imagen')?.setValue(null);
       await this.loadHistorial();
 
     } catch (error) {
@@ -133,7 +129,8 @@ export class HistorialUsuarioComponent implements OnInit {
       this.isLoading = false;
     }
   }
-    goBack() {
-      this.router.navigate(['/usuarios', this.dni]);
-    }
+
+  goBack() {
+    this.router.navigate(['/usuarios', this.dni]);
+  }
 }

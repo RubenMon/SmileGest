@@ -9,5 +9,6 @@ export interface HistorialData {
   descripcion: string;
   imagenUrl?: string;
   fecha?: any;
+  imagenBase64?: string | null;
 }
 
