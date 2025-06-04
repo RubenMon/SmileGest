@@ -20,5 +20,9 @@
     <button mat-flat-button type="submit">
       {{ editMode ? 'Guardar Cambios' : 'Crear Usuario' }}
     </button>
+
+    <button mat-stroked-button type="button" (click)="goToHistorial()" *ngIf="editMode">
+      Ver Historial
+    </button>
   </form>
 </div>
