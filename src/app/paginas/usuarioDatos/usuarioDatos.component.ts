@@ -80,8 +80,11 @@ export class UsuarioDatosComponent implements OnInit {
 
   goToHistorial() {
     const dni = this.form.get('dni')?.value;
+    const nombreCompleto = this.form.get('nombreCompleto')?.value;
     if (dni) {
-      this.router.navigate(['/historial', dni]);
+      this.router.navigate(['/historial', dni], {
+        state: { nombreCompleto }
+      });
     }
   }
 }
