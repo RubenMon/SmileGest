@@ -17,24 +17,30 @@ export const routes: Routes = [
     path: 'register',
     loadComponent: () => import('./auth/register/register.component').then(m => m.RegisterComponent),
   },
-    {
-    path: 'calendario',
-    loadComponent: () => import('./paginas/calendar/calendar.component').then(m => m.CalendarComponent),
-  },
+
   {
     path: 'login',
     loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent),
   },
   {
+    path: 'calendario',
+    canActivate: [authGuard],
+    loadComponent: () => import('./paginas/calendar/calendar.component').then(m => m.CalendarComponent),
+  },
+  {
     path: 'usuarios',
+    canActivate: [authGuard],
     loadComponent: () => import('./paginas/usuarios/usuarios.component').then(m => m.UsuariosComponent)
   },
   {
     path: 'usuarios/:dni',
+    canActivate: [authGuard],
     loadComponent: () => import('./paginas/usuarioDatos/usuarioDatos.component').then(m => m.UsuarioDatosComponent),
   },
   {
-  path: 'historial/:dni',
-  loadComponent: () => import('./paginas/historial-usuario/historial-usuario.component').then(m => m.HistorialUsuarioComponent),
+    path: 'historial/:dni',
+    canActivate: [authGuard],
+    loadComponent: () => import('./paginas/historial-usuario/historial-usuario.component').then(m => m.HistorialUsuarioComponent),
   }
+
 ];

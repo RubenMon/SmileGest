@@ -1,6 +1,7 @@
 import { Injectable, inject } from "@angular/core";
 import { Auth } from '@angular/fire/auth'; // Cambiado a la importación moderna
 import { Firestore } from '@angular/fire/firestore'; // Cambiado a la importación moderna
+import { onAuthStateChanged, User } from 'firebase/auth';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -94,9 +95,14 @@ private currentEmail: string | null = null;
   }
 
 
-  isAuthenticated(): boolean {
-    return this.auth.currentUser !== null;
+  isAuthenticated(): Promise<boolean> {
+    return new Promise(resolve => {
+      onAuthStateChanged(this.auth, (user: User | null) => {
+        resolve(!!user);
+      });
+    });
   }
+
 
   validateDniLetter(dni: string): boolean {
     if (!dni || !/^\d{8}[A-Za-z]$/.test(dni)) return false;

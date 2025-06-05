@@ -9,7 +9,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-
 import { HistorialItem } from '../../interfaces/historial.interface';
 import { HistorialData } from '../../interfaces/historial.interface';
 
@@ -47,27 +46,16 @@ export class HistorialUsuarioComponent implements OnInit {
     });
   }
 
-  async ngOnInit(): Promise<void> {
-    this.dni = this.route.snapshot.paramMap.get('dni')!;
-    await this.loadUserName();
-    await this.loadHistorial();
-  }
+ async ngOnInit(): Promise<void> {
+  this.dni = this.route.snapshot.paramMap.get('dni')!;
 
-  async loadUserName() {
-    try {
-      const userDocRef = doc(this.firestore, `users/${this.dni}`);
-      const userDocSnap = await getDoc(userDocRef);
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        this.userName = userData?.['nombreCompleto'] || 'Sin nombre';
-      } else {
-        this.userName = 'Usuario desconocido';
-      }
-    } catch (error) {
-      console.error('Error cargando el nombre:', error);
-      this.userName = 'Error al cargar nombre';
-    }
-  }
+  const nav = this.router.getCurrentNavigation();
+  const state = nav?.extras?.state as { nombreCompleto?: string };
+
+  this.userName = state?.nombreCompleto ?? 'Usuario desconocido';
+
+  await this.loadHistorial();
+}
 
   async loadHistorial() {
     try {
