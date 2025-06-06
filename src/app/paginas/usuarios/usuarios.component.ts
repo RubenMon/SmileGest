@@ -3,6 +3,7 @@ import { Firestore, collection, collectionData } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import { Observable, map, combineLatest, startWith, BehaviorSubject } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { FormsModule } from '@angular/forms';
 
@@ -15,7 +16,7 @@ interface Usuario {
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, MatCardModule, FormsModule],
+  imports: [CommonModule, MatCardModule, FormsModule, MatIconModule],
   templateUrl: './usuarios.component.html',
   styleUrls: ['./usuarios.component.css']
 })

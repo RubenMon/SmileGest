@@ -26,6 +26,16 @@
   -ms-overflow-style: none;
 }
 
+.back-btn-floating {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .usuarios-scroll::-webkit-scrollbar {
   display: none;
 }
