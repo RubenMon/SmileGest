@@ -1,27 +1,34 @@
+<button mat-stroked-button color="accent" type="button" (click)="verUsuarios()" class="back-btn-floating">
+  <mat-icon>arrow_back</mat-icon> Volver
+</button>
+
 <div class="user-container">
   <h2>"Editar Usuario"</h2>
 
   <form [formGroup]="form" (ngSubmit)="saveUser()">
     <mat-form-field appearance="fill">
       <mat-label>DNI</mat-label>
-      <input matInput formControlName="dni" [readonly]="editMode" />
+      <input matInput formControlName="dni" readonly />
     </mat-form-field>
 
     <mat-form-field appearance="fill">
       <mat-label>Email</mat-label>
       <input matInput formControlName="email" />
+      <mat-error *ngIf="form.get('email')?.hasError('required')">Email requerido</mat-error>
+      <mat-error *ngIf="form.get('email')?.hasError('email')">Email no válido</mat-error>
     </mat-form-field>
 
     <mat-form-field appearance="fill">
       <mat-label>Nombre Completo</mat-label>
       <input matInput formControlName="nombreCompleto" />
+      <mat-error *ngIf="form.get('nombreCompleto')?.hasError('required')">Nombre requerido</mat-error>
     </mat-form-field>
 
-    <button mat-flat-button type="submit">
+    <button mat-flat-button color="primary" type="submit">
       {{ editMode ? 'Guardar Cambios' : 'Crear Usuario' }}
     </button>
 
-    <button mat-stroked-button type="button" (click)="goToHistorial()" *ngIf="editMode">
+    <button mat-flat-button color="primary" type="button" (click)="goToHistorial()" *ngIf="editMode">
       Ver Historial
     </button>
   </form>
