@@ -1,34 +1,31 @@
-<button mat-stroked-button color="accent" type="button" (click)="verUsuarios()" class="back-btn-floating">
-  <mat-icon>arrow_back</mat-icon> Volver
+<button mat-stroked-button type="button" color="accent" (click)="verUsuarios()" class="back-btn-floating">
+   <mat-icon>arrow_back</mat-icon>Volver a Usuarios
 </button>
 
 <div class="user-container">
-  <h2>"Editar Usuario"</h2>
+  <h2>Datos del Usuario</h2>
 
   <form [formGroup]="form" (ngSubmit)="saveUser()">
-    <mat-form-field appearance="fill">
+    <mat-form-field>
       <mat-label>DNI</mat-label>
-      <input matInput formControlName="dni" readonly />
+         <input matInput formControlName="dni" [disabled]="true">
     </mat-form-field>
 
-    <mat-form-field appearance="fill">
+    <mat-form-field>
       <mat-label>Email</mat-label>
-      <input matInput formControlName="email" />
-      <mat-error *ngIf="form.get('email')?.hasError('required')">Email requerido</mat-error>
-      <mat-error *ngIf="form.get('email')?.hasError('email')">Email no válido</mat-error>
+      <input matInput formControlName="email" [disabled]="!editingOwnProfile">
     </mat-form-field>
 
-    <mat-form-field appearance="fill">
+    <mat-form-field>
       <mat-label>Nombre Completo</mat-label>
-      <input matInput formControlName="nombreCompleto" />
-      <mat-error *ngIf="form.get('nombreCompleto')?.hasError('required')">Nombre requerido</mat-error>
+      <input matInput formControlName="nombreCompleto">
     </mat-form-field>
 
-    <button mat-flat-button color="primary" type="submit">
-      {{ editMode ? 'Guardar Cambios' : 'Crear Usuario' }}
+    <button mat-flat-button type="submit" color="primary">
+      Guardar Cambios
     </button>
 
-    <button mat-flat-button color="primary" type="button" (click)="goToHistorial()" *ngIf="editMode">
+    <button mat-flat-button type="button" color="accent" (click)="goToHistorial()">
       Ver Historial
     </button>
   </form>

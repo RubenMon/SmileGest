@@ -26,15 +26,27 @@
     No hay historial disponible.
   </div>
 
-  <div *ngFor="let item of historial" class="historial-item">
+  <div *ngFor="let item of historial" class="historial-item" (click)="verImagenCompleta(item.imagenUrl ?? null)">
     <mat-card>
       <mat-card-title>
         {{ item.fecha ? (item.fecha | date:'short') : 'Sin fecha' }}
       </mat-card-title>
       <mat-card-content>
-        <p>{{ item.descripcion }}</p>
-        <img *ngIf="item.imagenUrl" [src]="item.imagenUrl" width="200" />
+        <div class="descripcion-scrollable">
+          {{ item.descripcion }}
+        </div>
+      <div class="historial-img-container">
+        <img *ngIf="item.imagenUrl" [src]="item.imagenUrl" width="200" class="historial-img"/>
+      </div>
       </mat-card-content>
     </mat-card>
+  </div>
+
+  <!-- Imagen en pantalla completa -->
+  <div class="fullscreen-overlay" *ngIf="fullscreenImageUrl">
+    <div class="close-button" (click)="cerrarImagenCompleta()">
+      <mat-icon>close</mat-icon>
+    </div>
+    <img [src]="fullscreenImageUrl" class="fullscreen-img" />
   </div>
 </div>

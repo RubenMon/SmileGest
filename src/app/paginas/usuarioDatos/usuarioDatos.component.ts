@@ -1,8 +1,9 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Firestore, doc, getDoc, setDoc, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { getAuth, updateEmail } from 'firebase/auth';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -28,26 +29,21 @@ export class UsuarioDatosComponent implements OnInit {
   router = inject(Router);
 
   form = new FormGroup({
-    dni: new FormControl({ value: '', disabled: false }, Validators.required),
-    email: new FormControl('', [Validators.required, Validators.email]),
+    dni: new FormControl({ value: '', disabled: true }, Validators.required),
+    email: new FormControl({ value: '', disabled: true }, [Validators.required, Validators.email]),
     nombreCompleto: new FormControl('', Validators.required),
   });
 
   editMode = false;
   originalData: any = null;
+  editingOwnProfile = false;
 
   ngOnInit(): void {
     const dni = this.route.snapshot.paramMap.get('dni');
     const usuarioState = history.state?.usuario;
 
     if (usuarioState) {
-      // Cargamos datos desde el estado si están disponibles
-      this.form.setValue({
-        dni: usuarioState.dni || '',
-        email: usuarioState.email || '',
-        nombreCompleto: usuarioState.nombreCompleto || '',
-      });
-      this.originalData = usuarioState;
+      this.setFormData(usuarioState);
       this.editMode = true;
     } else if (dni && dni !== 'nuevo') {
       this.loadUser(dni);
@@ -59,11 +55,31 @@ export class UsuarioDatosComponent implements OnInit {
     const snap = await getDoc(userRef);
     if (snap.exists()) {
       const userData = snap.data();
-      this.form.setValue(userData as any);
-      this.originalData = userData;
+      this.setFormData(userData);
       this.editMode = true;
     } else {
       alert('Usuario no encontrado.');
+    }
+  }
+
+  setFormData(data: any) {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    this.originalData = data;
+    this.editingOwnProfile = currentUser?.email === data.email;
+
+    this.form.setValue({
+      dni: data.dni || '',
+      email: data.email || '',
+      nombreCompleto: data.nombreCompleto || '',
+    });
+
+    // Reaplicar restricciones de edición
+    this.form.get('dni')?.disable(); // Nunca editable
+    if (this.editingOwnProfile) {
+      this.form.get('email')?.enable();
+    } else {
+      this.form.get('email')?.disable();
     }
   }
 
@@ -78,41 +94,50 @@ export class UsuarioDatosComponent implements OnInit {
       return;
     }
 
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    // Actualizar email en Firebase Auth solo si lo está cambiando él mismo
+    if (this.editingOwnProfile && data.email && currentUser && currentUser.email !== data.email) {
+      try {
+        await updateEmail(currentUser, data.email);
+      } catch (error: any) {
+        if (error.code === 'auth/requires-recent-login') {
+          alert('Por seguridad, vuelve a iniciar sesión para actualizar el correo.');
+        } else {
+          console.error('Error al actualizar email en Auth:', error.code);
+          alert('No se pudo actualizar el correo en autenticación.');
+        }
+        return;
+      }
+    }
+
+    // Guardar en Firestore
     const userRef = doc(this.firestore, 'users', data.dni!);
-    await setDoc(userRef, data);
+    await setDoc(userRef, {
+      dni: data.dni,
+      email: this.editingOwnProfile ? data.email : this.originalData.email,
+      nombreCompleto: data.nombreCompleto,
+    });
 
     this.originalData = { ...data };
     this.editMode = true;
-    alert(this.editMode ? 'Usuario actualizado.' : 'Usuario creado.');
+    alert('Usuario actualizado.');
   }
 
   isDataUnchanged(data: any): boolean {
-    return this.originalData &&
+    return (
+      this.originalData &&
       data.email === this.originalData.email &&
-      data.nombreCompleto === this.originalData.nombreCompleto;
-  }
-
-  async deleteUser() {
-    const dni = this.form.get('dni')?.value;
-    if (!dni) return;
-
-    await deleteDoc(doc(this.firestore, 'users', dni));
-    this.form.reset();
-    this.editMode = false;
-    alert('Usuario eliminado.');
-  }
-
-  newUser() {
-    this.form.reset();
-    this.editMode = false;
-    this.originalData = null;
+      data.nombreCompleto === this.originalData.nombreCompleto
+    );
   }
 
   goToHistorial() {
     const data = this.form.getRawValue();
     if (data.dni) {
       this.router.navigate(['/historial', data.dni], {
-        state: { usuario: data }
+        state: { usuario: data },
       });
     }
   }
