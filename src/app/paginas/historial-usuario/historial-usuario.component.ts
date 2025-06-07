@@ -44,6 +44,7 @@ export class HistorialUsuarioComponent implements OnInit {
   historial: HistorialItem[] = [];
   form: FormGroup;
   isLoading = false;
+  fullscreenImageUrl: string | null = null;
 
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
@@ -99,9 +100,7 @@ export class HistorialUsuarioComponent implements OnInit {
             fecha: data.fecha?.toDate?.() ?? null,
           } as HistorialItem;
         })
-        .sort(
-          (a, b) => (b.fecha?.getTime() || 0) - (a.fecha?.getTime() || 0)
-        );
+        .sort((a, b) => (b.fecha?.getTime() || 0) - (a.fecha?.getTime() || 0));
     } catch (error) {
       console.error('Error al cargar historial:', error);
       alert('Error al cargar historial');
@@ -142,9 +141,7 @@ export class HistorialUsuarioComponent implements OnInit {
       await this.loadHistorial();
     } catch (error) {
       console.error('Error al agregar historial:', error);
-      alert(
-        'Ocurrió un error al agregar el historial. Por favor, intente de nuevo.'
-      );
+      alert('Ocurrió un error al agregar el historial. Por favor, intente de nuevo.');
     } finally {
       this.isLoading = false;
     }
@@ -154,5 +151,15 @@ export class HistorialUsuarioComponent implements OnInit {
     this.router.navigate(['/usuarios', this.dni], {
       state: { usuario: this.usuario }
     });
+  }
+
+  verImagenCompleta(imagenUrl: string | null) {
+    if (imagenUrl) {
+      this.fullscreenImageUrl = imagenUrl;
+    }
+  }
+
+  cerrarImagenCompleta() {
+    this.fullscreenImageUrl = null;
   }
 }
