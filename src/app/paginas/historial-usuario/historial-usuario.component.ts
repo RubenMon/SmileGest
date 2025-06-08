@@ -16,6 +16,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
+import { MatSelectModule } from '@angular/material/select';
 import { HistorialItem, HistorialData } from '../../interfaces/historial.interface';
 
 @Component({
@@ -29,6 +30,7 @@ import { HistorialItem, HistorialData } from '../../interfaces/historial.interfa
     MatButtonModule,
     MatIconModule,
     MatCardModule,
+    MatSelectModule,
   ],
   templateUrl: './historial-usuario.component.html',
   styleUrls: ['./historial-usuario.component.css'],
@@ -45,6 +47,8 @@ export class HistorialUsuarioComponent implements OnInit {
   form: FormGroup;
   isLoading = false;
   fullscreenImageUrl: string | null = null;
+
+  ordenFecha: 'asc' | 'desc' = 'desc';
 
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
@@ -64,6 +68,7 @@ export class HistorialUsuarioComponent implements OnInit {
     }
 
     await this.loadHistorial();
+    this.ordenarHistorial();
   }
 
   async loadNombreUsuario() {
@@ -90,21 +95,27 @@ export class HistorialUsuarioComponent implements OnInit {
       const histRef = collection(this.firestore, 'historyClinical');
       const q = query(histRef, where('dni', '==', this.dni));
       const snapshot = await getDocs(q);
-      this.historial = snapshot.docs
-        .map((doc) => {
-          const data = doc.data() as HistorialData;
-          return {
-            id: doc.id,
-            descripcion: data.descripcion,
-            imagenUrl: data.imagenBase64,
-            fecha: data.fecha?.toDate?.() ?? null,
-          } as HistorialItem;
-        })
-        .sort((a, b) => (b.fecha?.getTime() || 0) - (a.fecha?.getTime() || 0));
+      this.historial = snapshot.docs.map((doc) => {
+        const data = doc.data() as HistorialData;
+        return {
+          id: doc.id,
+          descripcion: data.descripcion,
+          imagenUrl: data.imagenBase64,
+          fecha: data.fecha?.toDate?.() ?? null,
+        } as HistorialItem;
+      });
     } catch (error) {
       console.error('Error al cargar historial:', error);
       alert('Error al cargar historial');
     }
+  }
+
+  ordenarHistorial() {
+    this.historial.sort((a, b) => {
+      const tA = a.fecha?.getTime() || 0;
+      const tB = b.fecha?.getTime() || 0;
+      return this.ordenFecha === 'asc' ? tA - tB : tB - tA;
+    });
   }
 
   onFileSelected(event: Event) {
@@ -139,6 +150,7 @@ export class HistorialUsuarioComponent implements OnInit {
 
       this.form.reset();
       await this.loadHistorial();
+      this.ordenarHistorial();
     } catch (error) {
       console.error('Error al agregar historial:', error);
       alert('Ocurrió un error al agregar el historial. Por favor, intente de nuevo.');

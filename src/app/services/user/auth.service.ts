@@ -1,31 +1,16 @@
 import { Injectable, inject } from "@angular/core";
-import { Auth } from '@angular/fire/auth'; // Cambiado a la importación moderna
-import { Firestore } from '@angular/fire/firestore'; // Cambiado a la importación moderna
-import { onAuthStateChanged, User } from 'firebase/auth';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
-  signOut
-} from 'firebase/auth';
-import {
-  doc,
-  setDoc,
-  query,
-  where,
-  collection,
-  getDocs
-} from 'firebase/firestore';
+import { Auth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, User } from '@angular/fire/auth';
+import { Firestore, doc, setDoc, query, where, collection, getDocs, docData } from '@angular/fire/firestore';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private auth = inject(Auth); // Inyección de Auth
-  private firestore = inject(Firestore); // Inyección de Firestore
+  private auth = inject(Auth);
+  private firestore = inject(Firestore);
 
-private currentEmail: string | null = null;
+  private currentEmail: string | null = null;
 
   constructor() {}
 
@@ -38,7 +23,7 @@ private currentEmail: string | null = null;
     return user?.email || null;
   }
 
-  // Métodos de autenticación
+  // Registro de usuario
   register(usuario: any) {
     return createUserWithEmailAndPassword(this.auth, usuario.email, usuario.password)
       .then((userCredential) => {
@@ -54,6 +39,7 @@ private currentEmail: string | null = null;
       });
   }
 
+  // Login con email y password
   login(usuario: any) {
     return signInWithEmailAndPassword(this.auth, usuario.email, usuario.password)
       .then(result => {
@@ -62,6 +48,7 @@ private currentEmail: string | null = null;
       });
   }
 
+  // Login con Google
   loginWithGoogleOnly() {
     const provider = new GoogleAuthProvider();
     return signInWithPopup(this.auth, provider)
@@ -71,30 +58,34 @@ private currentEmail: string | null = null;
       });
   }
 
+  // Comprobar si existe usuario por email
   async userExistsInFirestore(email: string): Promise<boolean> {
     const q = query(collection(this.firestore, 'users'), where('email', '==', email));
     const snapshot = await getDocs(q);
     return !snapshot.empty;
   }
 
+  // Comprobar si existe DNI
   async dniExistsInFirestore(dni: string): Promise<boolean> {
     const q = query(collection(this.firestore, 'users'), where('dni', '==', dni));
     const snapshot = await getDocs(q);
     return !snapshot.empty;
   }
 
+  // Guardar datos usuario
   async saveUserData(uid: string, email: string, dni: string, nombreCompleto: string) {
     const userRef = doc(this.firestore, 'users', uid);
     return setDoc(userRef, { email, dni, nombreCompleto });
   }
 
+  // Logout
   logout() {
     return signOut(this.auth).then(() => {
       this.setCurrentEmail(null);
     });
   }
 
-
+  // Comprobar si está autenticado (Promise<boolean>)
   isAuthenticated(): Promise<boolean> {
     return new Promise(resolve => {
       onAuthStateChanged(this.auth, (user: User | null) => {
@@ -103,12 +94,30 @@ private currentEmail: string | null = null;
     });
   }
 
-
+  // Validar letra del DNI
   validateDniLetter(dni: string): boolean {
     if (!dni || !/^\d{8}[A-Za-z]$/.test(dni)) return false;
     const number = parseInt(dni.substring(0, 8), 10);
     const letter = dni.charAt(8).toUpperCase();
     const validLetters = "TRWAGMYFPDXBNJZSQVHLCKE";
     return letter === validLetters.charAt(number % 23);
+  }
+
+  // Obtener datos del usuario logueado como Observable, incluyendo campo DNI
+  getUserLogged(): Observable<any> {
+    return new Observable(observer => {
+      onAuthStateChanged(this.auth, user => {
+        if (!user) {
+          observer.next(null);
+          observer.complete();
+        } else {
+          const userDocRef = doc(this.firestore, `users/${user.uid}`);
+          docData(userDocRef).subscribe(userData => {
+            observer.next(userData);
+            observer.complete();
+          }, error => observer.error(error));
+        }
+      });
+    });
   }
 }

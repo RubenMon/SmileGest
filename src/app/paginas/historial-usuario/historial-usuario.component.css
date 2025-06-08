@@ -58,6 +58,15 @@
   100% { transform: rotate(360deg); }
 }
 
+.historial-scroll-container {
+  max-height: 530px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-bottom: 2rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
 .historial-item {
   background: #ffffff;
   margin-bottom: 1.2rem;
@@ -81,7 +90,7 @@
 }
 
 .descripcion-scrollable {
-  max-height: 4.5em; /* aprox 3 líneas */
+  max-height: 4.5em;
   overflow-y: auto;
   line-height: 1.5em;
   margin-bottom: 0.5rem;
@@ -90,7 +99,7 @@
 }
 
 .historial-img {
-  width: 50%;
+  width: 60%;
   height: auto;
   cursor: pointer;
   margin-top: 0.5rem;
@@ -104,8 +113,6 @@
   margin-top: 0.5rem;
 }
 
-
-/* Imagen en pantalla completa */
 .fullscreen-overlay {
   position: fixed;
   top: 0;
