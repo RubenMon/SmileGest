@@ -1,6 +1,13 @@
 <section class="calendar">
   <!-- Barra superior con los botones -->
   <div class="calendar__top-bar">
+    <div class="calendar__views">
+      <!-- Botón Perfil visible solo para usuarios (no admin) -->
+      <button *ngIf="!isAdmin" mat-raised-button color="primary" (click)="verPerfil()">
+        Perfil
+      </button>
+    </div>
+
     <button mat-raised-button color="warn" (click)="logout()">
       Cerrar sesión
     </button>
@@ -41,16 +48,17 @@
     >
       <div class="calendar__day-header"><span>{{ day.day }}</span></div>
       <div class="calendar__events">
-      <button
-        class="calendar__event"
-        *ngFor="let ev of day.events; let j = index"
-        (click)="showEventModal(ev, i, j)"
-        [ngStyle]="{ 'background-color': ev.background, 'color': ev.color }">
-        <div class="calendar__event-content-month no-gap">
-          <div class="time">{{ ev.date | date: 'shortTime' }}</div>
-          <div class="details">{{ ev.name }} - {{ ev.patientName }} - {{ ev.patientDni }}</div>
-        </div>
-      </button>
+        <button
+          class="calendar__event"
+          *ngFor="let ev of day.events; let j = index"
+          (click)="showEventModal(ev, i, j)"
+          [ngStyle]="{ 'background-color': ev.background, 'color': ev.color }"
+        >
+          <div class="calendar__event-content-month no-gap">
+            <div class="time">{{ ev.date | date: 'shortTime' }}</div>
+            <div class="details">{{ ev.name }} - {{ ev.patientName }} - {{ ev.patientDni }}</div>
+          </div>
+        </button>
       </div>
     </div>
   </div>
@@ -65,18 +73,18 @@
     >
       <div class="calendar__day-header"><span>{{ day.day }}</span></div>
       <div class="calendar__events">
-      <button
-        class="calendar__event_week"
-        *ngFor="let ev of day.events; let j = index"
-        (click)="showEventModal(ev)"
-        [ngStyle]="{ 'background-color': ev.background, 'color': ev.color }"
-      >
-        <div class="calendar__event-content">
-          <div class="time">{{ ev.date | date: 'shortTime' }}</div>
-          <div class="event-title">{{ ev.name }}</div>
-          <div class="event-patient">{{ ev.patientName }} - {{ ev.patientDni }}</div>
-        </div>
-      </button>
+        <button
+          class="calendar__event_week"
+          *ngFor="let ev of day.events; let j = index"
+          (click)="showEventModal(ev)"
+          [ngStyle]="{ 'background-color': ev.background, 'color': ev.color }"
+        >
+          <div class="calendar__event-content">
+            <div class="time">{{ ev.date | date: 'shortTime' }}</div>
+            <div class="event-title">{{ ev.name }}</div>
+            <div class="event-patient">{{ ev.patientName }} - {{ ev.patientDni }}</div>
+          </div>
+        </button>
       </div>
     </div>
   </div>

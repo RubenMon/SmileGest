@@ -13,6 +13,7 @@ import { ModalAdminEventsComponent } from '../../modals/modal-admin-events/modal
 import { ModalUserEventsComponent } from '../../modals/modal-user-events/modal-user-events.component';
 import { AuthService } from '../../services/user/auth.service';
 import { Router } from '@angular/router';
+import { switchMap, of } from 'rxjs';
 
 @Component({
   selector: 'app-calendar',
@@ -47,6 +48,7 @@ export class CalendarComponent implements OnInit {
   private date = new Date();
 
   isAdmin: boolean = false;
+  dni?: string;
 
   ngOnInit(): void {
     this.subscribeToEvents();
@@ -54,6 +56,14 @@ export class CalendarComponent implements OnInit {
 
     const user = getAuth().currentUser;
     this.isAdmin = user?.email === 'administracionclinica@gmail.com';
+
+    this.authService.getUserLogged().subscribe(userData => {
+      if (userData?.dni) {
+        this.dni = userData.dni;
+      } else {
+        console.warn('No se encontró el DNI del usuario.');
+      }
+    });
   }
 
   toggleView(mode: 'month' | 'week') {
@@ -198,5 +208,9 @@ export class CalendarComponent implements OnInit {
 
   verUsuarios() {
     this.router.navigate(['/usuarios']);
+  }
+
+  verPerfil() {
+      this.router.navigate(['/usuarios/' + this.dni]);
   }
 }

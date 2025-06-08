@@ -22,27 +22,36 @@
     </button>
   </form>
 
-  <div *ngIf="historial.length === 0" class="empty-message">
+  <mat-form-field appearance="outline" class="full-width" *ngIf="historial.length > 0">
+    <mat-label>Ordenar por fecha</mat-label>
+    <mat-select [(value)]="ordenFecha" (selectionChange)="ordenarHistorial()">
+      <mat-option value="desc">De más reciente a más antigua</mat-option>
+      <mat-option value="asc">De más antigua a más reciente</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <div class="empty-message" *ngIf="historial.length === 0">
     No hay historial disponible.
   </div>
 
-  <div *ngFor="let item of historial" class="historial-item" (click)="verImagenCompleta(item.imagenUrl ?? null)">
-    <mat-card>
-      <mat-card-title>
-        {{ item.fecha ? (item.fecha | date:'short') : 'Sin fecha' }}
-      </mat-card-title>
-      <mat-card-content>
-        <div class="descripcion-scrollable">
-          {{ item.descripcion }}
-        </div>
-      <div class="historial-img-container">
-        <img *ngIf="item.imagenUrl" [src]="item.imagenUrl" width="200" class="historial-img"/>
-      </div>
-      </mat-card-content>
-    </mat-card>
+  <div class="historial-scroll-container" *ngIf="historial.length > 0">
+    <div *ngFor="let item of historial" class="historial-item" (click)="verImagenCompleta(item.imagenUrl ?? null)">
+      <mat-card>
+        <mat-card-title>
+          {{ item.fecha ? (item.fecha | date:'short') : 'Sin fecha' }}
+        </mat-card-title>
+        <mat-card-content>
+          <div class="descripcion-scrollable">
+            {{ item.descripcion }}
+          </div>
+          <div class="historial-img-container">
+            <img *ngIf="item.imagenUrl" [src]="item.imagenUrl" width="200" class="historial-img"/>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
   </div>
 
-  <!-- Imagen en pantalla completa -->
   <div class="fullscreen-overlay" *ngIf="fullscreenImageUrl">
     <div class="close-button" (click)="cerrarImagenCompleta()">
       <mat-icon>close</mat-icon>
