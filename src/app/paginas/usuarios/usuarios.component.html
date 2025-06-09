@@ -1,6 +1,6 @@
-    <button mat-stroked-button color="accent" type="button" (click)="volverAlCalendario()" class="back-btn-floating">
-        <mat-icon>arrow_back</mat-icon> Volver
-    </button>
+<button mat-stroked-button color="accent" type="button" (click)="volverAlCalendario()" class="back-btn-floating">
+  <mat-icon>arrow_back</mat-icon> Volver
+</button>
 
 <div class="usuarios-container">
   <h2>Clientes Registrados</h2>
@@ -16,7 +16,7 @@
   <div class="usuarios-scroll">
     <mat-card
       *ngFor="let user of usuariosFiltrados$ | async"
-      (click)="verUsuario(user.dni)"
+      (click)="verPerfil(user.dni)"
       class="usuario-card"
     >
       <h3>{{ user.nombreCompleto }}</h3>

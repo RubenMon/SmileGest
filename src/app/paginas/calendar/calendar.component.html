@@ -1,24 +1,20 @@
 <section class="calendar">
-  <!-- Barra superior con los botones -->
   <div class="calendar__top-bar">
+
+
+    <button mat-raised-button color="warn" (click)="logout()">Cerrar sesión</button>
+
     <div class="calendar__views">
-      <!-- Botón Perfil visible solo para usuarios (no admin) -->
       <button *ngIf="!isAdmin" mat-raised-button color="primary" (click)="verPerfil()">
         Perfil
       </button>
     </div>
 
-    <button mat-raised-button color="warn" (click)="logout()">
-      Cerrar sesión
-    </button>
-
     <button *ngIf="isAdmin" mat-raised-button color="accent" (click)="verUsuarios()">
       Ver usuarios
     </button>
 
-    <button mat-raised-button color="primary" (click)="showEventModal()">
-      Nuevo evento
-    </button>
+    <button mat-raised-button color="primary" (click)="showEventModal()">Nuevo evento</button>
 
     <div class="calendar__views">
       <button mat-button (click)="toggleView('month')">Vista Mes</button>
@@ -26,7 +22,6 @@
     </div>
   </div>
 
-  <!-- Navegación del calendario -->
   <div class="calendar__navigation">
     <button mat-icon-button (click)="previous()">
       <mat-icon>chevron_left</mat-icon>
@@ -38,14 +33,9 @@
     </button>
   </div>
 
-  <!-- Vista mensual -->
   <div *ngIf="viewMode==='month'" class="calendar__grid">
     <span class="calendar__day-name" *ngFor="let n of nameDay">{{ n }}</span>
-    <div
-      class="calendar__day"
-      *ngFor="let day of calendarDays; let i = index"
-      [ngClass]="{ 'calendar__day--current-day': day.currentDay }"
-    >
+    <div class="calendar__day" *ngFor="let day of calendarDays; let i = index" [ngClass]="{ 'calendar__day--current-day': day.currentDay }">
       <div class="calendar__day-header"><span>{{ day.day }}</span></div>
       <div class="calendar__events">
         <button
@@ -63,14 +53,9 @@
     </div>
   </div>
 
-  <!-- Vista semanal -->
   <div *ngIf="viewMode==='week'" class="calendar__grid week-view">
     <span class="calendar__day-name" *ngFor="let n of nameDay">{{ n }}</span>
-    <div
-      class="calendar__day"
-      *ngFor="let day of weekDays; let i = index"
-      [ngClass]="{ 'calendar__day--current-day': day.currentDay }"
-    >
+    <div class="calendar__day" *ngFor="let day of weekDays; let i = index" [ngClass]="{ 'calendar__day--current-day': day.currentDay }">
       <div class="calendar__day-header"><span>{{ day.day }}</span></div>
       <div class="calendar__events">
         <button

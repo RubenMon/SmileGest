@@ -62,46 +62,49 @@ export class LoginComponent {
   }
 
   async onClickGoogle() {
-  try {
-    const result = await this.authService.loginWithGoogleOnly();
-    const user = result.user;
-    const email = user.email!;
-    const uid = user.uid;
+    try {
+      const result = await this.authService.loginWithGoogleOnly();
+      const user = result.user;
+      const email = user.email!;
+      const uid = user.uid;
 
-    const exists = await this.authService.userExistsInFirestore(email);
+      const exists = await this.authService.userExistsInFirestore(email);
 
-    if (!exists) {
-      const dialogRef = this.dialog.open(DniDialogComponent);
-      const result = await firstValueFrom(dialogRef.afterClosed());
+      if (!exists) {
+        const dialogRef = this.dialog.open(DniDialogComponent);
+        const result = await firstValueFrom(dialogRef.afterClosed());
 
-      if (!result || !result.dni || !result.nombreCompleto) {
-        this.showErrorPopup('Datos inválidos o cancelados por el usuario.');
-        await user.delete();
-        return;
+        if (!result || !result.dni || !result.nombreCompleto) {
+          this.showErrorPopup('Datos inválidos o cancelados por el usuario.');
+          await user.delete();
+          return;
+        }
+
+        const { dni, nombreCompleto } = result;
+
+        if (!this.authService.validateDniLetter(dni)) {
+          this.showErrorPopup('DNI inválido.');
+          await user.delete();
+          return;
+        }
+
+        const dniExists = await this.authService.dniExistsInFirestore(dni);
+        if (dniExists) {
+          this.showErrorPopup('Este DNI ya está registrado con otra cuenta.');
+          await user.delete();
+          return;
+        }
+
+        // Aquí también guardamos el usuario usando DNI como id de doc
+        await this.authService.saveUserData(uid, email, dni, nombreCompleto);
       }
 
-      const { dni, nombreCompleto } = result;
-
-      if (!this.authService.validateDniLetter(dni)) {
-        this.showErrorPopup('DNI inválido.');
-        await user.delete();
-        return;
-      }
-
-      const dniExists = await this.authService.dniExistsInFirestore(dni);
-      if (dniExists) {
-        this.showErrorPopup('Este DNI ya está registrado con otra cuenta.');
-        await user.delete();
-        return;
-      }
-
-      await this.authService.saveUserData(uid, email, dni, nombreCompleto);
+      // Navegar tras login exitoso
+      this.router.navigate(['/inicio']);
+    } catch (error) {
+      this.showErrorPopup('Error al iniciar sesión con Google.');
     }
-  } catch (error) {
-    this.showErrorPopup('Error al iniciar sesión con Google.');
   }
-}
-
 
   showErrorPopup(message: string) {
     const dialogRef = this.dialog.open(ErrorDialogComponent);

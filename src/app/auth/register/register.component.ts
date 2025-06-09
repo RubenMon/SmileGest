@@ -37,7 +37,7 @@ export class RegisterComponent {
   });
 
   async onSubmit() {
-    const { dni, nombreCompleto } = this.form.value;
+    const { dni, nombreCompleto, email, password } = this.form.value;
 
     if (!this.authService.validateDniLetter(dni!)) {
       this.showErrorPopup("El DNI introducido no es válido.");
@@ -63,7 +63,13 @@ export class RegisterComponent {
     }
 
     try {
-      await this.authService.register(this.form.value);
+      // Paso explícito de los campos para evitar errores de tipos
+      await this.authService.register({
+        nombreCompleto: nombreCompleto!,
+        email: email!,
+        password: password!,
+        dni: dni!
+      });
       this.router.navigate(['/login']);
     } catch (error: any) {
       this.showErrorPopup(this.getErrorMessage(error.code));

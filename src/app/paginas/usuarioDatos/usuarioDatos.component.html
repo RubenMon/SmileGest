@@ -1,6 +1,18 @@
-<button mat-stroked-button type="button" color="accent" (click)="verUsuarios()" class="back-btn-floating">
-   <mat-icon>arrow_back</mat-icon>Volver a Usuarios
+<!-- Botón de retroceso según si es admin o no -->
+<button mat-stroked-button type="button" color="accent"
+        *ngIf="isAdmin; else volverCalendario"
+        (click)="verUsuarios()"
+        class="back-btn-floating">
+  <mat-icon>arrow_back</mat-icon>Volver a Usuarios
 </button>
+
+<ng-template #volverCalendario>
+  <button mat-stroked-button type="button" color="accent"
+          (click)="volverAlCalendario()"
+          class="back-btn-floating">
+    <mat-icon>arrow_back</mat-icon>Volver al Calendario
+  </button>
+</ng-template>
 
 <div class="user-container">
   <h2>Datos del Usuario</h2>
@@ -8,7 +20,7 @@
   <form [formGroup]="form" (ngSubmit)="saveUser()">
     <mat-form-field>
       <mat-label>DNI</mat-label>
-         <input matInput formControlName="dni" [disabled]="true">
+      <input matInput formControlName="dni" [disabled]="true">
     </mat-form-field>
 
     <mat-form-field>
@@ -25,7 +37,7 @@
       Guardar Cambios
     </button>
 
-    <button mat-flat-button type="button" color="accent" (click)="goToHistorial()">
+    <button mat-flat-button type="button" color="accent" (click)="goToHistorial()" *ngIf="isAdmin">
       Ver Historial
     </button>
   </form>
