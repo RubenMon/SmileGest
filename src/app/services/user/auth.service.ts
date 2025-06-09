@@ -1,7 +1,25 @@
 import { Injectable, inject } from "@angular/core";
-import { Auth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, User } from '@angular/fire/auth';
-import { Firestore, doc, setDoc, query, where, collection, getDocs, docData } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import {
+  Auth,
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+  User
+} from '@angular/fire/auth';
+import {
+  Firestore,
+  doc,
+  setDoc,
+  query,
+  where,
+  collection,
+  getDocs,
+  docData
+} from '@angular/fire/firestore';
+import { Observable, BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -11,8 +29,30 @@ export class AuthService {
   private firestore = inject(Firestore);
 
   private currentEmail: string | null = null;
+  private currentUserSubject = new BehaviorSubject<any | null>(null);
+  public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor() {}
+  constructor() {
+    this.initUserListener();
+  }
+
+  private initUserListener() {
+    onAuthStateChanged(this.auth, user => {
+      if (!user) {
+        this.currentUserSubject.next(null);
+      } else {
+        // Ahora busca el usuario en Firestore por DNI (id del doc)
+        // Pero para eso necesitamos conocer el DNI, lo ideal es tenerlo almacenado en el token o sesión.
+        // Como no tenemos DNI directamente, aquí dejamos como estaba: usa UID (aunque luego la colección usa DNI como id)
+        // Por eso, se recomienda guardar también el UID dentro del doc, y luego consultar con alguna lógica extra.
+        // Si quieres, luego podemos mejorar esta parte.
+        const userDocRef = doc(this.firestore, `users/${user.uid}`);
+        docData(userDocRef).subscribe(userData => {
+          this.currentUserSubject.next(userData);
+        });
+      }
+    });
+  }
 
   setCurrentEmail(email: string | null) {
     this.currentEmail = email;
@@ -23,23 +63,19 @@ export class AuthService {
     return user?.email || null;
   }
 
-  // Registro de usuario
-  register(usuario: any) {
-    return createUserWithEmailAndPassword(this.auth, usuario.email, usuario.password)
-      .then((userCredential) => {
-        this.setCurrentEmail(usuario.email);
-
-        const uid = userCredential.user.uid;
-        const userRef = doc(this.firestore, 'users', uid);
-        return setDoc(userRef, {
-          email: usuario.email,
-          dni: usuario.dni,
-          nombreCompleto: usuario.nombreCompleto
-        });
-      });
+  async register(usuario: { email: string; password: string; nombreCompleto: string; dni: string; }) {
+    const userCredential = await createUserWithEmailAndPassword(this.auth, usuario.email, usuario.password);
+    this.setCurrentEmail(usuario.email);
+    // Guarda el usuario con DNI como ID del doc:
+    const userRef = doc(this.firestore, 'users', usuario.dni);
+    return setDoc(userRef, {
+      email: usuario.email,
+      dni: usuario.dni,
+      nombreCompleto: usuario.nombreCompleto,
+      uid: userCredential.user.uid
+    });
   }
 
-  // Login con email y password
   login(usuario: any) {
     return signInWithEmailAndPassword(this.auth, usuario.email, usuario.password)
       .then(result => {
@@ -48,7 +84,6 @@ export class AuthService {
       });
   }
 
-  // Login con Google
   loginWithGoogleOnly() {
     const provider = new GoogleAuthProvider();
     return signInWithPopup(this.auth, provider)
@@ -58,34 +93,36 @@ export class AuthService {
       });
   }
 
-  // Comprobar si existe usuario por email
   async userExistsInFirestore(email: string): Promise<boolean> {
     const q = query(collection(this.firestore, 'users'), where('email', '==', email));
     const snapshot = await getDocs(q);
     return !snapshot.empty;
   }
 
-  // Comprobar si existe DNI
   async dniExistsInFirestore(dni: string): Promise<boolean> {
-    const q = query(collection(this.firestore, 'users'), where('dni', '==', dni));
-    const snapshot = await getDocs(q);
-    return !snapshot.empty;
+    // Aquí ya no usamos query sino búsqueda directa por id del doc
+    const userDocRef = doc(this.firestore, 'users', dni);
+    try {
+      const userSnap = await getDocs(query(collection(this.firestore, 'users'), where('dni', '==', dni)));
+      return !userSnap.empty;
+    } catch {
+      return false;
+    }
   }
 
-  // Guardar datos usuario
   async saveUserData(uid: string, email: string, dni: string, nombreCompleto: string) {
-    const userRef = doc(this.firestore, 'users', uid);
-    return setDoc(userRef, { email, dni, nombreCompleto });
+    // Guardamos el usuario con el dni como id
+    const userRef = doc(this.firestore, 'users', dni);
+    return setDoc(userRef, { uid, email, dni, nombreCompleto });
   }
 
-  // Logout
   logout() {
     return signOut(this.auth).then(() => {
       this.setCurrentEmail(null);
+      this.currentUserSubject.next(null);
     });
   }
 
-  // Comprobar si está autenticado (Promise<boolean>)
   isAuthenticated(): Promise<boolean> {
     return new Promise(resolve => {
       onAuthStateChanged(this.auth, (user: User | null) => {
@@ -94,7 +131,6 @@ export class AuthService {
     });
   }
 
-  // Validar letra del DNI
   validateDniLetter(dni: string): boolean {
     if (!dni || !/^\d{8}[A-Za-z]$/.test(dni)) return false;
     const number = parseInt(dni.substring(0, 8), 10);
@@ -103,21 +139,7 @@ export class AuthService {
     return letter === validLetters.charAt(number % 23);
   }
 
-  // Obtener datos del usuario logueado como Observable, incluyendo campo DNI
   getUserLogged(): Observable<any> {
-    return new Observable(observer => {
-      onAuthStateChanged(this.auth, user => {
-        if (!user) {
-          observer.next(null);
-          observer.complete();
-        } else {
-          const userDocRef = doc(this.firestore, `users/${user.uid}`);
-          docData(userDocRef).subscribe(userData => {
-            observer.next(userData);
-            observer.complete();
-          }, error => observer.error(error));
-        }
-      });
-    });
+    return this.currentUser$;
   }
 }

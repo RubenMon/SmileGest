@@ -8,6 +8,7 @@ import { MatCardModule } from '@angular/material/card';
 import { FormsModule } from '@angular/forms';
 
 interface Usuario {
+  id: string;
   dni: string;
   nombreCompleto: string;
   email: string;
@@ -32,7 +33,11 @@ export class UsuariosComponent implements OnInit {
 
   ngOnInit(): void {
     const usersRef = collection(this.firestore, 'users');
-    this.usuarios$ = collectionData(usersRef, { idField: 'dni' }) as Observable<Usuario[]>;
+    this.usuarios$ = collectionData(usersRef, { idField: 'id' }).pipe(
+      map((usuarios: any[]) =>
+        usuarios.filter(u => u.email !== 'administracionclinica@gmail.com')
+      )
+    ) as Observable<Usuario[]>;
 
     this.usuariosFiltrados$ = combineLatest([
       this.usuarios$,
@@ -46,8 +51,13 @@ export class UsuariosComponent implements OnInit {
     );
   }
 
-  verUsuario(dni: string) {
-    this.router.navigate(['/usuarios', dni]);
+  verPerfil(id: string) {
+    if (id != null) {
+      console.log(`Navegando al perfil del usuario con ID: ${id}`);
+      this.router.navigate(['/usuarios', id]);
+    } else {
+      alert('Aún no se ha cargado el ID del usuario. Intenta nuevamente.');
+    }
   }
 
   filtrarUsuarios() {
@@ -56,12 +66,10 @@ export class UsuariosComponent implements OnInit {
 
   private coincideConFiltro(nombre: string, filtro: string): boolean {
     const palabras = this.normalizar(nombre).split(' ');
-    const primerNombre = palabras[0]; // Solo el primer nombre
+    const primerNombre = palabras[0];
     const filtroNormalizado = this.normalizar(filtro);
-
     return primerNombre.startsWith(filtroNormalizado);
   }
-
 
   private normalizar(texto: string): string {
     return texto
@@ -71,7 +79,6 @@ export class UsuariosComponent implements OnInit {
   }
 
   volverAlCalendario() {
-  this.router.navigate(['/calendario']);
+    this.router.navigate(['/calendario']);
   }
-
 }

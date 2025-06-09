@@ -37,35 +37,50 @@ export class UsuarioDatosComponent implements OnInit {
   editMode = false;
   originalData: any = null;
   editingOwnProfile = false;
+  isAdmin = false;
 
   ngOnInit(): void {
-    const dni = this.route.snapshot.paramMap.get('dni');
-    const usuarioState = history.state?.usuario;
-
-    if (usuarioState) {
-      this.setFormData(usuarioState);
-      this.editMode = true;
-    } else if (dni && dni !== 'nuevo') {
-      this.loadUser(dni);
-    }
-  }
-
-  async loadUser(dni: string) {
-    const userRef = doc(this.firestore, 'users', dni);
-    const snap = await getDoc(userRef);
-    if (snap.exists()) {
-      const userData = snap.data();
-      this.setFormData(userData);
-      this.editMode = true;
-    } else {
-      alert('Usuario no encontrado.');
-    }
-  }
-
-  setFormData(data: any) {
     const auth = getAuth();
     const currentUser = auth.currentUser;
-    this.originalData = data;
+
+    if (currentUser?.email === 'administracionclinica@gmail.com') {
+      this.isAdmin = true;
+    }
+
+    const id = this.route.snapshot.paramMap.get('dni')?.trim();
+    console.log('ID recibido en UsuarioDatosComponent:', id);
+
+    if (id && id !== 'nuevo') {
+      this.loadUser(id);
+    } else {
+      alert('ID no válido o no proporcionado.');
+    }
+  }
+
+  async loadUser(id: string) {
+    try {
+      const docRef = doc(this.firestore, 'users', id);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        console.log('Datos cargados desde Firestore:', userData);
+        this.setFormData(userData, id);
+        this.editMode = true;
+      } else {
+        console.warn('Usuario no encontrado con ID:', id);
+        alert('Usuario no encontrado en Firestore.');
+      }
+    } catch (error) {
+      console.error('Error al cargar usuario:', error);
+      alert('Error al acceder a Firestore.');
+    }
+  }
+
+  setFormData(data: any, id: string) {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    this.originalData = { ...data, id };
     this.editingOwnProfile = currentUser?.email === data.email;
 
     this.form.setValue({
@@ -74,8 +89,9 @@ export class UsuarioDatosComponent implements OnInit {
       nombreCompleto: data.nombreCompleto || '',
     });
 
-    // Reaplicar restricciones de edición
-    this.form.get('dni')?.disable(); // Nunca editable
+    this.form.get('dni')?.disable();
+    this.form.get('email')?.setValue(data.email || '');
+
     if (this.editingOwnProfile) {
       this.form.get('email')?.enable();
     } else {
@@ -97,7 +113,6 @@ export class UsuarioDatosComponent implements OnInit {
     const auth = getAuth();
     const currentUser = auth.currentUser;
 
-    // Actualizar email en Firebase Auth solo si lo está cambiando él mismo
     if (this.editingOwnProfile && data.email && currentUser && currentUser.email !== data.email) {
       try {
         await updateEmail(currentUser, data.email);
@@ -112,17 +127,21 @@ export class UsuarioDatosComponent implements OnInit {
       }
     }
 
-    // Guardar en Firestore
-    const userRef = doc(this.firestore, 'users', data.dni!);
-    await setDoc(userRef, {
-      dni: data.dni,
-      email: this.editingOwnProfile ? data.email : this.originalData.email,
-      nombreCompleto: data.nombreCompleto,
-    });
+    try {
+      const userRef = doc(this.firestore, 'users', this.originalData.id);
+      await setDoc(userRef, {
+        dni: data.dni,
+        email: this.editingOwnProfile ? data.email : this.originalData.email,
+        nombreCompleto: data.nombreCompleto,
+      });
 
-    this.originalData = { ...data };
-    this.editMode = true;
-    alert('Usuario actualizado.');
+      this.originalData = { ...data, id: this.originalData.id };
+      this.editMode = true;
+      alert('Usuario actualizado.');
+    } catch (error) {
+      console.error('Error al guardar datos en Firestore:', error);
+      alert('Ocurrió un error al guardar el usuario.');
+    }
   }
 
   isDataUnchanged(data: any): boolean {
@@ -144,5 +163,9 @@ export class UsuarioDatosComponent implements OnInit {
 
   verUsuarios() {
     this.router.navigate(['/usuarios']);
+  }
+
+  volverAlCalendario() {
+    this.router.navigate(['/calendario']);
   }
 }

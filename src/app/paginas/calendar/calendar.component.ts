@@ -13,7 +13,7 @@ import { ModalAdminEventsComponent } from '../../modals/modal-admin-events/modal
 import { ModalUserEventsComponent } from '../../modals/modal-user-events/modal-user-events.component';
 import { AuthService } from '../../services/user/auth.service';
 import { Router } from '@angular/router';
-import { switchMap, of } from 'rxjs';
+import { Firestore, collection, collectionData, query, where } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-calendar',
@@ -37,6 +37,7 @@ export class CalendarComponent implements OnInit {
   router = inject(Router);
   private modalSvc = inject(ModalEventsService);
   private dialog = inject(MatDialog);
+  private firestore = inject(Firestore);
 
   nameDay = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
   calendarDays: Calendar[] = [];
@@ -48,7 +49,7 @@ export class CalendarComponent implements OnInit {
   private date = new Date();
 
   isAdmin: boolean = false;
-  dni?: string;
+  userId?: string; // Aquí guardaremos el DNI
 
   ngOnInit(): void {
     this.subscribeToEvents();
@@ -57,13 +58,22 @@ export class CalendarComponent implements OnInit {
     const user = getAuth().currentUser;
     this.isAdmin = user?.email === 'administracionclinica@gmail.com';
 
-    this.authService.getUserLogged().subscribe(userData => {
-      if (userData?.dni) {
-        this.dni = userData.dni;
-      } else {
-        console.warn('No se encontró el DNI del usuario.');
-      }
-    });
+    if (user?.email) {
+      // Consulta Firestore por email para obtener el documento user y extraer el dni
+      const usersRef = collection(this.firestore, 'users');
+      const q = query(usersRef, where('email', '==', user.email));
+      collectionData(q).subscribe(users => {
+        if (users.length > 0) {
+          const userData = users[0];
+          this.userId = userData['dni'] || undefined;
+          if (!this.userId) {
+            alert('No se encontró DNI en Firestore para este usuario');
+          }
+        } else {
+          alert('Usuario no encontrado en Firestore con email: ' + user.email);
+        }
+      });
+    }
   }
 
   toggleView(mode: 'month' | 'week') {
@@ -211,6 +221,11 @@ export class CalendarComponent implements OnInit {
   }
 
   verPerfil() {
-      this.router.navigate(['/usuarios/' + this.dni]);
+    if (this.userId) {
+      console.log(`Navegando al perfil del usuario con DNI: ${this.userId}`);
+      this.router.navigate(['/usuarios', this.userId]);
+    } else {
+      alert('Aún no se ha cargado el DNI del usuario. Intenta nuevamente.');
+    }
   }
 }
