@@ -140,7 +140,8 @@ async loadPacientes() {
         nombre: primerNombre,
         email: data['correo'] || ''
       };
-    });
+    })
+    .filter(p => p.nombre !== 'Administrador');
 }
 
   /** Lista base de horas */

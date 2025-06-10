@@ -1,0 +1,33 @@
+<!-- src/app/graficos/graficos-tipos.component.html -->
+
+<div class="graficos">
+  <div class="graficos__top-bar">
+    <button mat-stroked-button type="button" color="accent"
+            (click)="volverAlCalendario()"
+            class="graficos__back-btn">
+      <mat-icon>arrow_back</mat-icon>
+      Volver al Calendario
+    </button>
+
+    <h2 class="graficos__title">Estadísticas Especialistas</h2>
+
+    <div class="graficos__selector">
+      <label for="tipo">Tipo de gráfico:</label>
+      <select id="tipo" [(ngModel)]="selectedChartType">
+        <option *ngFor="let type of chartTypes" [value]="type.value">
+          {{ type.label }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <div class="graficos__chart-area">
+    <div *ngIf="chartReady" class="graficos__chart-wrapper">
+      <canvas baseChart
+              [data]="pieChartData"
+              [type]="selectedChartType">
+      </canvas>
+    </div>
+    <div *ngIf="!chartReady" class="graficos__loading">Cargando datos...</div>
+  </div>
+</div>

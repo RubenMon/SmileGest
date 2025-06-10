@@ -228,4 +228,8 @@ export class CalendarComponent implements OnInit {
       alert('Aún no se ha cargado el DNI del usuario. Intenta nuevamente.');
     }
   }
+
+  verGraficos() {
+    this.router.navigate(['/graficos-tipos']);
+  }
 }
