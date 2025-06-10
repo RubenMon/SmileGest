@@ -41,6 +41,10 @@ export const routes: Routes = [
     path: 'historial/:dni',
     canActivate: [authGuard],
     loadComponent: () => import('./paginas/historial-usuario/historial-usuario.component').then(m => m.HistorialUsuarioComponent),
+  },
+  {
+    path: 'graficos-tipos',
+    canActivate: [authGuard],
+    loadComponent: () => import('./paginas/graficos-tipos/graficos-tipos.component').then(m => m.GraficosTiposComponent),
   }
-
 ];
