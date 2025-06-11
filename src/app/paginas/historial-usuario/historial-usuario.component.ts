@@ -8,6 +8,8 @@ import {
   query,
   where,
 } from '@angular/fire/firestore';
+import { Auth, user } from '@angular/fire/auth';
+import { firstValueFrom } from 'rxjs';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -36,67 +38,71 @@ import { HistorialItem, HistorialData } from '../../interfaces/historial.interfa
   styleUrls: ['./historial-usuario.component.css'],
 })
 export class HistorialUsuarioComponent implements OnInit {
+  // Inyección de dependencias de Angular y Firebase
   firestore = inject(Firestore);
   route = inject(ActivatedRoute);
   router = inject(Router);
+  auth = inject(Auth);
 
-  /** DNI del usuario cuyo historial se muestra */
+  // DNI del usuario actual
   dni: string = '';
-
-  /** Nombre completo del usuario */
+  // Nombre del usuario
   userName: string = '';
-
-  /** Objeto con los datos del usuario */
+  // Datos del usuario
   usuario: any = null;
-
-  /** Lista de entradas del historial del usuario */
+  // Lista de historial
   historial: HistorialItem[] = [];
-
-  /** Formulario reactivo para agregar nueva entrada de historial */
+  // Formulario reactivo
   form: FormGroup;
-
-  /** Estado para mostrar indicador de carga */
+  // Indicador de carga
   isLoading = false;
-
-  /** URL de imagen en modo pantalla completa */
+  // Imagen en pantalla completa
   fullscreenImageUrl: string | null = null;
-
-  /** Orden para mostrar el historial: ascendente o descendente */
+  // Orden por fecha
   ordenFecha: 'asc' | 'desc' = 'desc';
+  // Indica si el usuario actual es administrador
+  isAdmin: boolean = false;
 
   constructor(private fb: FormBuilder) {
-    // Inicializa el formulario con validaciones
+    // Inicialización del formulario
     this.form = this.fb.group({
       descripcion: ['', Validators.required],
       imagenBase64: [null],
     });
+
+    if (!this.isAdmin) {
+      this.form.get('descripcion')?.disable();
+    }
   }
 
   /**
-   * Método del ciclo de vida Angular, se ejecuta al iniciar el componente.
-   * Obtiene el DNI desde la ruta, carga usuario y su historial.
+   * Se ejecuta al iniciar el componente.
+   * Obtiene el DNI desde la URL, identifica al usuario autenticado
+   * y carga el historial del usuario correspondiente.
    */
   async ngOnInit(): Promise<void> {
     this.dni = this.route.snapshot.paramMap.get('dni')!;
     console.log('DNI recibido en HistorialUsuarioComponent:', this.dni);
 
-    // Si se pasó el usuario por navegación, se usa directamente
+    // Detectar usuario actual y comprobar si es administrador
+    const currentUser = await firstValueFrom(user(this.auth));
+    this.isAdmin = currentUser?.email === 'administracionclinica@gmail.com';
+
+    // Obtener datos del usuario desde el estado de navegación o desde Firestore
     this.usuario = history.state?.usuario || null;
 
     if (this.usuario) {
       this.userName = this.usuario.nombreCompleto || 'Usuario sin nombre';
     } else {
-      // Si no, se busca el nombre del usuario en Firestore
       await this.loadNombreUsuario();
     }
 
-    // Carga el historial y lo ordena
     await this.loadHistorial();
     this.ordenarHistorial();
   }
 
   /**
-   * Carga el nombre completo del usuario consultando Firestore usando el DNI.
+   * Carga el nombre completo del usuario desde Firestore usando el DNI.
    */
   async loadNombreUsuario() {
     try {
@@ -118,7 +124,7 @@ export class HistorialUsuarioComponent implements OnInit {
   }
 
   /**
-   * Carga las entradas del historial clínico del usuario desde Firestore.
+   * Carga el historial clínico del usuario desde Firestore.
    */
   async loadHistorial() {
     try {
@@ -142,7 +148,7 @@ export class HistorialUsuarioComponent implements OnInit {
   }
 
   /**
-   * Ordena el arreglo de historial según el campo fecha, en orden ascendente o descendente.
+   * Ordena el historial por fecha, de forma ascendente o descendente.
    */
   ordenarHistorial() {
     this.historial.sort((a, b) => {
@@ -153,8 +159,7 @@ export class HistorialUsuarioComponent implements OnInit {
   }
 
   /**
-   * Evento disparado al seleccionar un archivo en el input.
-   * Convierte la imagen a base64 para guardarla en el formulario.
+   * Convierte la imagen seleccionada a base64 y la guarda en el formulario.
    * @param event Evento del input file
    */
   onFileSelected(event: Event) {
@@ -171,11 +176,12 @@ export class HistorialUsuarioComponent implements OnInit {
   }
 
   /**
-   * Añade una nueva entrada al historial en Firestore usando los datos del formulario.
-   * Luego recarga el historial actualizado.
+   * Agrega una nueva entrada al historial en Firestore.
+   * Solo ejecutable por el administrador.
    */
   async addHistorial() {
-    if (this.form.invalid) return;
+    // Evita que usuarios no administradores agreguen entradas
+    if (!this.isAdmin || this.form.invalid) return;
 
     this.isLoading = true;
 
@@ -192,6 +198,7 @@ export class HistorialUsuarioComponent implements OnInit {
         imagenBase64,
       });
 
+      // Reiniciar formulario y recargar historial
       this.form.reset();
       await this.loadHistorial();
       this.ordenarHistorial();
@@ -204,7 +211,7 @@ export class HistorialUsuarioComponent implements OnInit {
   }
 
   /**
-   * Navega hacia la página del usuario, pasando el estado del usuario.
+   * Regresa a la vista de usuario.
    */
   goBack() {
     this.router.navigate(['/usuarios', this.dni], {
@@ -213,7 +220,7 @@ export class HistorialUsuarioComponent implements OnInit {
   }
 
   /**
-   * Muestra la imagen en pantalla completa cuando se hace clic sobre ella.
+   * Muestra la imagen seleccionada en modo pantalla completa.
    * @param imagenUrl URL o base64 de la imagen
    */
   verImagenCompleta(imagenUrl: string | null) {
@@ -223,7 +230,7 @@ export class HistorialUsuarioComponent implements OnInit {
   }
 
   /**
-   * Cierra la vista de imagen en pantalla completa.
+   * Cierra la vista en pantalla completa de la imagen.
    */
   cerrarImagenCompleta() {
     this.fullscreenImageUrl = null;
