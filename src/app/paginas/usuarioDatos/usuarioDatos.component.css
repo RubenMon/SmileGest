@@ -44,11 +44,3 @@ button[mat-flat-button] {
 button[mat-flat-button]:hover {
   background-color: #006f91;
 }
-
-button[color="warn"] {
-  background-color: #e53935;
-}
-
-button[color="warn"]:hover {
-  background-color: #c62828;
-}

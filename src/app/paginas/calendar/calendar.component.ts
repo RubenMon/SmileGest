@@ -49,17 +49,21 @@ export class CalendarComponent implements OnInit {
   private date = new Date();
 
   isAdmin: boolean = false;
-  userId?: string; // Aquí guardaremos el DNI
+  userId?: string;
 
+  /**
+   * Método del ciclo de vida Angular que se ejecuta al inicializar el componente.
+   * Se suscribe a los eventos, inicializa el calendario y obtiene el DNI del usuario actual.
+   */
   ngOnInit(): void {
     this.subscribeToEvents();
+
     this.initializeCalendar();
 
     const user = getAuth().currentUser;
     this.isAdmin = user?.email === 'administracionclinica@gmail.com';
 
     if (user?.email) {
-      // Consulta Firestore por email para obtener el documento user y extraer el dni
       const usersRef = collection(this.firestore, 'users');
       const q = query(usersRef, where('email', '==', user.email));
       collectionData(q).subscribe(users => {
@@ -76,11 +80,22 @@ export class CalendarComponent implements OnInit {
     }
   }
 
+  /**
+   * Cambia el modo de vista entre 'month' y 'week' y reinicializa el calendario.
+   * @param mode Nuevo modo de vista ('month' o 'week').
+   */
   toggleView(mode: 'month' | 'week') {
     this.viewMode = mode;
     this.initializeCalendar();
   }
 
+  /**
+   * Abre el modal para crear o editar un evento.
+   * Selecciona el componente modal según si el usuario es admin o usuario normal.
+   * @param ev Evento a mostrar o editar (opcional).
+   * @param i Índice (opcional) para posición en listas (no usado aquí).
+   * @param j Índice (opcional) para posición en listas (no usado aquí).
+   */
   showEventModal(ev?: Events, i?: number, j?: number) {
     const user = getAuth().currentUser;
     const isAdmin = user?.email === 'administracionclinica@gmail.com';
@@ -88,6 +103,11 @@ export class CalendarComponent implements OnInit {
     this.modalSvc.openModal(ModalComp, ev);
   }
 
+  /**
+   * Elimina un evento después de pedir confirmación mediante un diálogo.
+   * @param i Índice del día en el calendario (mes o semana).
+   * @param j Índice del evento dentro del día.
+   */
   removeEvent(i: number, j: number) {
     const dialogRef = this.dialog.open(DeleteComponent);
     dialogRef.afterClosed().subscribe(ok => {
@@ -97,6 +117,10 @@ export class CalendarComponent implements OnInit {
     });
   }
 
+  /**
+   * Se suscribe a los eventos emitidos por el servicio ModalEventsService.
+   * Actualiza la lista de todos los eventos y reinicializa el calendario cuando cambian.
+   */
   private subscribeToEvents() {
     this.modalSvc.events$.subscribe(events => {
       this.allEvents = events;
@@ -104,6 +128,10 @@ export class CalendarComponent implements OnInit {
     });
   }
 
+  /**
+   * Inicializa el calendario según el modo de vista actual.
+   * Si es 'month' crea el calendario mensual, si es 'week' crea la vista semanal.
+   */
   private initializeCalendar() {
     if (this.viewMode === 'month') {
       this.updateCurrentMonthAndYear();
@@ -114,6 +142,9 @@ export class CalendarComponent implements OnInit {
     }
   }
 
+  /**
+   * Actualiza la variable currentMonthAndYear con el nombre del mes y el año actual.
+   */
   private updateCurrentMonthAndYear() {
     const monthNames = [
       'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -122,15 +153,22 @@ export class CalendarComponent implements OnInit {
     this.currentMonthAndYear = `${monthNames[this.date.getMonth()]} de ${this.date.getFullYear()}`;
   }
 
+  /**
+   * Actualiza la variable currentWeekRange con el rango de fechas de la semana actual (lunes a domingo).
+   */
   private updateCurrentWeekRange() {
     const dt = new Date(this.date);
-    const day = dt.getDay() || 7;
+    const day = dt.getDay() || 7; // domingo como 7 en lugar de 0
     const monday = new Date(dt.setDate(dt.getDate() - (day - 1)));
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
     this.currentWeekRange = `${monday.toLocaleDateString('es-ES')} - ${sunday.toLocaleDateString('es-ES')}`;
   }
 
+  /**
+   * Crea el arreglo de días para mostrar en el calendario mensual,
+   * agregando espacios en blanco al inicio para alinear correctamente los días.
+   */
   private createCalendarDays() {
     this.calendarDays = [];
     const year = this.date.getFullYear();
@@ -158,6 +196,10 @@ export class CalendarComponent implements OnInit {
     }
   }
 
+  /**
+   * Crea el arreglo de días para mostrar en la vista semanal,
+   * comenzando desde el lunes de la semana actual.
+   */
   private createWeekDays() {
     this.weekDays = [];
     const dt = new Date(this.date);
@@ -177,10 +219,19 @@ export class CalendarComponent implements OnInit {
     }
   }
 
+  /**
+   * Obtiene los eventos que corresponden a una fecha concreta.
+   * @param date Fecha para filtrar eventos.
+   * @returns Array de eventos que ocurren ese día.
+   */
   private getEventsForDate(date: Date) {
     return this.allEvents.filter(ev => ev.date.toDateString() === date.toDateString());
   }
 
+  /**
+   * Mueve la fecha actual al mes o semana anterior, según el modo de vista,
+   * y actualiza el calendario.
+   */
   previous() {
     if (this.viewMode === 'month') {
       this.date.setMonth(this.date.getMonth() - 1);
@@ -190,6 +241,10 @@ export class CalendarComponent implements OnInit {
     this.initializeCalendar();
   }
 
+  /**
+   * Mueve la fecha actual al mes o semana siguiente, según el modo de vista,
+   * y actualiza el calendario.
+   */
   next() {
     if (this.viewMode === 'month') {
       this.date.setMonth(this.date.getMonth() + 1);
@@ -199,12 +254,20 @@ export class CalendarComponent implements OnInit {
     this.initializeCalendar();
   }
 
+  /**
+   * Formatea una fecha para mostrarla con formato largo en español.
+   * @param date Fecha (Date o string) a formatear.
+   * @returns Fecha formateada en formato 'lunes, 1 de enero de 2025'.
+   */
   formatDate(date: Date | string) {
     return new Date(date).toLocaleDateString('es-ES', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
   }
 
+  /**
+   * Cierra la sesión del usuario actual, redirige al login y recarga la página.
+   */
   logout() {
     this.authService.logout()
       .then(() => {
@@ -216,10 +279,17 @@ export class CalendarComponent implements OnInit {
       });
   }
 
+  /**
+   * Navega a la página de listado de usuarios (funcionalidad admin).
+   */
   verUsuarios() {
     this.router.navigate(['/usuarios']);
   }
 
+  /**
+   * Navega al perfil del usuario actual usando su DNI, si está cargado.
+   * Muestra alerta si aún no se ha cargado el DNI.
+   */
   verPerfil() {
     if (this.userId) {
       console.log(`Navegando al perfil del usuario con DNI: ${this.userId}`);
@@ -229,6 +299,9 @@ export class CalendarComponent implements OnInit {
     }
   }
 
+  /**
+   * Navega a la página con gráficos de tipos de eventos.
+   */
   verGraficos() {
     this.router.navigate(['/graficos-tipos']);
   }

@@ -52,6 +52,12 @@
   color: #777;
 }
 
-.graficos__back-btn {
-  align-self: flex-end;
+.back-btn-floating {
+  position: fixed;
+  top: 2rem;
+  right: 5rem;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
