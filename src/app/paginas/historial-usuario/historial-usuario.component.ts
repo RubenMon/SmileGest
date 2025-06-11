@@ -40,37 +40,64 @@ export class HistorialUsuarioComponent implements OnInit {
   route = inject(ActivatedRoute);
   router = inject(Router);
 
+  /** DNI del usuario cuyo historial se muestra */
   dni: string = '';
+
+  /** Nombre completo del usuario */
   userName: string = '';
+
+  /** Objeto con los datos del usuario */
   usuario: any = null;
+
+  /** Lista de entradas del historial del usuario */
   historial: HistorialItem[] = [];
+
+  /** Formulario reactivo para agregar nueva entrada de historial */
   form: FormGroup;
+
+  /** Estado para mostrar indicador de carga */
   isLoading = false;
+
+  /** URL de imagen en modo pantalla completa */
   fullscreenImageUrl: string | null = null;
 
+  /** Orden para mostrar el historial: ascendente o descendente */
   ordenFecha: 'asc' | 'desc' = 'desc';
 
   constructor(private fb: FormBuilder) {
+    // Inicializa el formulario con validaciones
     this.form = this.fb.group({
       descripcion: ['', Validators.required],
       imagenBase64: [null],
     });
   }
 
+  /**
+   * Método del ciclo de vida Angular, se ejecuta al iniciar el componente.
+   * Obtiene el DNI desde la ruta, carga usuario y su historial.
+   */
   async ngOnInit(): Promise<void> {
     this.dni = this.route.snapshot.paramMap.get('dni')!;
+    console.log('DNI recibido en HistorialUsuarioComponent:', this.dni);
+
+    // Si se pasó el usuario por navegación, se usa directamente
     this.usuario = history.state?.usuario || null;
 
     if (this.usuario) {
       this.userName = this.usuario.nombreCompleto || 'Usuario sin nombre';
     } else {
+      // Si no, se busca el nombre del usuario en Firestore
       await this.loadNombreUsuario();
     }
 
+    // Carga el historial y lo ordena
     await this.loadHistorial();
     this.ordenarHistorial();
   }
 
+  /**
+   * Carga el nombre completo del usuario consultando Firestore usando el DNI.
+   */
   async loadNombreUsuario() {
     try {
       const usersRef = collection(this.firestore, 'users');
@@ -90,11 +117,15 @@ export class HistorialUsuarioComponent implements OnInit {
     }
   }
 
+  /**
+   * Carga las entradas del historial clínico del usuario desde Firestore.
+   */
   async loadHistorial() {
     try {
       const histRef = collection(this.firestore, 'historyClinical');
       const q = query(histRef, where('dni', '==', this.dni));
       const snapshot = await getDocs(q);
+
       this.historial = snapshot.docs.map((doc) => {
         const data = doc.data() as HistorialData;
         return {
@@ -110,6 +141,9 @@ export class HistorialUsuarioComponent implements OnInit {
     }
   }
 
+  /**
+   * Ordena el arreglo de historial según el campo fecha, en orden ascendente o descendente.
+   */
   ordenarHistorial() {
     this.historial.sort((a, b) => {
       const tA = a.fecha?.getTime() || 0;
@@ -118,6 +152,11 @@ export class HistorialUsuarioComponent implements OnInit {
     });
   }
 
+  /**
+   * Evento disparado al seleccionar un archivo en el input.
+   * Convierte la imagen a base64 para guardarla en el formulario.
+   * @param event Evento del input file
+   */
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
@@ -131,6 +170,10 @@ export class HistorialUsuarioComponent implements OnInit {
     reader.readAsDataURL(file);
   }
 
+  /**
+   * Añade una nueva entrada al historial en Firestore usando los datos del formulario.
+   * Luego recarga el historial actualizado.
+   */
   async addHistorial() {
     if (this.form.invalid) return;
 
@@ -143,6 +186,7 @@ export class HistorialUsuarioComponent implements OnInit {
       const histRef = collection(this.firestore, 'historyClinical');
       await addDoc(histRef, {
         dni: this.dni,
+        email: this.usuario.email,
         descripcion,
         fecha: new Date(),
         imagenBase64,
@@ -159,18 +203,28 @@ export class HistorialUsuarioComponent implements OnInit {
     }
   }
 
+  /**
+   * Navega hacia la página del usuario, pasando el estado del usuario.
+   */
   goBack() {
     this.router.navigate(['/usuarios', this.dni], {
       state: { usuario: this.usuario }
     });
   }
 
+  /**
+   * Muestra la imagen en pantalla completa cuando se hace clic sobre ella.
+   * @param imagenUrl URL o base64 de la imagen
+   */
   verImagenCompleta(imagenUrl: string | null) {
     if (imagenUrl) {
       this.fullscreenImageUrl = imagenUrl;
     }
   }
 
+  /**
+   * Cierra la vista de imagen en pantalla completa.
+   */
   cerrarImagenCompleta() {
     this.fullscreenImageUrl = null;
   }

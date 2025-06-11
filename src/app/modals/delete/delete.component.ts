@@ -11,8 +11,13 @@ import { MatButtonModule } from '@angular/material/button';
   styleUrl: './delete.component.scss'
 })
 export class DeleteComponent {
+  // Inyectamos la referencia del diálogo para poder cerrarlo
   private dialogRef = inject(MatDialogRef);
 
+  /**
+   * Método que se llama al pulsar "No" o cancelar.
+   * Cierra el diálogo sin devolver datos.
+   */
   onNoClick(): void {
     this.dialogRef.close();
   }

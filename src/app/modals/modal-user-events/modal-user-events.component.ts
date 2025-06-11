@@ -39,9 +39,12 @@ import { collectionData, Timestamp } from '@angular/fire/firestore';
   styleUrls: ['./modal-user-events.component.css'],
 })
 export class ModalUserEventsComponent implements OnInit, OnDestroy {
+  // Formulario reactivo para crear o editar eventos
   form: FormGroup;
+  // Fecha mínima seleccionable en el datepicker (hoy)
   minDate = new Date();
 
+  // Lista de especialidades disponibles para el evento
   especialidades: string[] = [
     'Odontólogo',
     'Odontopediatra',
@@ -52,9 +55,13 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
     'Higienista',
   ];
 
-  private allEvents: Events[] = [];
+  private allEvents: Events[] = [];  // Todos los eventos cargados para evitar solapamientos
+  // Horas disponibles para la fecha seleccionada
   availableHours: string[] = [];
+  // Usuario actual autenticado
   currentUser: { dni: string; nombre: string; email: string } | null = null;
+
+  // Para manejar múltiples suscripciones y limpiarlas
   private subs = new Subscription();
 
   constructor(
@@ -63,21 +70,33 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     @Inject(MAT_DIALOG_DATA) public data: Events
   ) {
+    // Inicializa el formulario con validaciones básicas
     this.form = this.fb.group({
+      // Nombre evento requerido, max 10 caracteres
       nombreEvento: ['', [Validators.required, Validators.pattern(/^.{1,10}$/)]],
+      // Especialidad requerida
       especialidad: ['', Validators.required],
+      // ID generado aleatoriamente
       id: [crypto.randomUUID(), Validators.required],
+      // Fecha inicial (hoy)
       date: [new Date(), Validators.required],
+      // Hora requerida
       hora: ['', Validators.required],
+      // Color de fondo por defecto
       background: ['#ffffff'],
+      // Color de texto por defecto
       color: ['#000000'],
     });
   }
 
   async ngOnInit(): Promise<void> {
+    // Carga datos del usuario actual para asignar al evento
     await this.loadCurrentUser();
-    this.loadAllEvents();  // Nueva lógica para obtener todos los eventos
 
+    // Carga todos los eventos existentes para calcular horas disponibles
+    this.loadAllEvents();
+
+    // Suscripción para actualizar horas disponibles cuando cambie la fecha en el formulario
     this.subs.add(
       this.form.get('date')!.valueChanges.subscribe(() => {
         this.updateAvailableHours();
@@ -85,16 +104,21 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
       })
     );
 
+    // Inicializa las horas disponibles en el momento de crear el modal
     this.updateAvailableHours();
   }
 
   ngOnDestroy(): void {
+    // Limpia todas las suscripciones para evitar fugas de memoria
     this.subs.unsubscribe();
   }
 
+  /**
+   * Obtiene el usuario actual autenticado desde Firestore por su email
+   */
   private async loadCurrentUser() {
     const email = this.authService.getCurrentEmail();
-    if (!email) return;
+    if (!email) return;  // Si no hay email, no hace nada
 
     const db = getFirestore();
     const q = query(collection(db, 'users'), where('email', '==', email));
@@ -109,11 +133,16 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Obtiene todos los eventos almacenados en Firestore para luego filtrar horas ocupadas
+   */
   private loadAllEvents() {
     const db = getFirestore();
     const eventsCollection = collection(db, 'events');
+    // collectionData devuelve un Observable con los documentos de 'events'
     const eventsData = collectionData(eventsCollection, { idField: 'id' });
 
+    // Suscripción para actualizar el arreglo de eventos y recalcular horas disponibles
     this.subs.add(eventsData.subscribe((rawEvents: any[]) => {
       this.allEvents = rawEvents.map(e => ({
         id: e.id,
@@ -130,6 +159,9 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
     }));
   }
 
+  /**
+   * Devuelve las horas base disponibles en el rango laboral
+   */
   private baseHours(): string[] {
     const hrs: string[] = [];
     for (let h = 10; h < 14; h++) hrs.push(`${h.toString().padStart(2, '0')}:00`);
@@ -137,23 +169,33 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
     return hrs;
   }
 
+  /**
+   * Actualiza la lista de horas disponibles para la fecha seleccionada,
+   * eliminando las horas ya ocupadas por otros eventos
+   */
   private updateAvailableHours() {
     const date: Date = this.form.get('date')!.value;
     const dayStr = date.toDateString();
 
+    // Obtiene las horas ocupadas ese día
     const occupied = this.allEvents
       .filter(ev => ev.date.toDateString() === dayStr)
       .map(ev => ev.date.getHours().toString().padStart(2, '0') + ':00');
 
+    // Filtra las horas base para eliminar las ocupadas
     this.availableHours = this.baseHours().filter(h => !occupied.includes(h));
   }
 
+  /**
+   * Guarda el evento, cerrando el modal y enviando los datos
+   */
   save() {
     if (this.form.valid && this.currentUser) {
       const v = this.form.value;
       const dt = new Date(v.date);
       dt.setHours(parseInt(v.hora), 0, 0, 0);
 
+      // Construye el objeto evento para guardar o actualizar
       const ev: Events = {
         id: v.id,
         name: v.nombreEvento,
@@ -166,14 +208,21 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
         color: v.color,
       };
 
+      // Cierra el diálogo enviando la acción (añadido o modificado) y el evento
       this.dialogRef.close({ action: this.data ? 'modified' : 'added', event: ev });
     }
   }
 
+  /**
+   * Cierra el modal sin guardar cambios
+   */
   cancelar() {
     this.dialogRef.close();
   }
 
+  /**
+   * Elimina el evento actual si existe y cierra el modal notificando la acción
+   */
   delete() {
     if (this.data) {
       this.dialogRef.close({ action: 'deleted', event: this.data });

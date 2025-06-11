@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
+import { EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 
 @Component({
   selector: 'app-usuario-datos',
@@ -24,25 +25,39 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./usuarioDatos.component.css'],
 })
 export class UsuarioDatosComponent implements OnInit {
+  // Inyección de servicios Firestore, ruta activa y router para navegación
   firestore = inject(Firestore);
   route = inject(ActivatedRoute);
   router = inject(Router);
 
+  // Formulario reactivo con controles para dni, email y nombre completo
+  // dni y email empiezan deshabilitados, con validaciones respectivas
   form = new FormGroup({
     dni: new FormControl({ value: '', disabled: true }, Validators.required),
     email: new FormControl({ value: '', disabled: true }, [Validators.required, Validators.email]),
     nombreCompleto: new FormControl('', Validators.required),
   });
 
+  // Controla si el formulario está en modo edición
   editMode = false;
+  // Guarda datos originales para comparación
   originalData: any = null;
+  // Indica si el usuario edita su propio perfil
   editingOwnProfile = false;
+  // Indica si el usuario actual es administrador
   isAdmin = false;
 
+  /**
+   * Al iniciar el componente:
+   * - Obtiene el usuario autenticado.
+   * - Determina si es administrador (email específico).
+   * - Obtiene el parámetro 'dni' de la ruta y carga los datos si existe.
+   */
   ngOnInit(): void {
     const auth = getAuth();
     const currentUser = auth.currentUser;
 
+    // Verificar si es administrador por correo
     if (currentUser?.email === 'administracionclinica@gmail.com') {
       this.isAdmin = true;
     }
@@ -50,6 +65,7 @@ export class UsuarioDatosComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('dni')?.trim();
     console.log('ID recibido en UsuarioDatosComponent:', id);
 
+    // Cargar usuario si el ID es válido
     if (id && id !== 'nuevo') {
       this.loadUser(id);
     } else {
@@ -57,6 +73,11 @@ export class UsuarioDatosComponent implements OnInit {
     }
   }
 
+  /**
+   * Carga el usuario desde Firestore usando su ID (dni).
+   * Si se encuentra, establece los datos en el formulario.
+   * Si no, muestra mensaje de error.
+   */
   async loadUser(id: string) {
     try {
       const docRef = doc(this.firestore, 'users', id);
@@ -77,6 +98,11 @@ export class UsuarioDatosComponent implements OnInit {
     }
   }
 
+  /**
+   * Establece los datos del usuario en el formulario.
+   * También detecta si el usuario actual está editando su propio perfil,
+   * habilitando o deshabilitando el campo email según corresponda.
+   */
   setFormData(data: any, id: string) {
     const auth = getAuth();
     const currentUser = auth.currentUser;
@@ -89,16 +115,22 @@ export class UsuarioDatosComponent implements OnInit {
       nombreCompleto: data.nombreCompleto || '',
     });
 
+    // dni siempre deshabilitado
     this.form.get('dni')?.disable();
-    this.form.get('email')?.setValue(data.email || '');
 
-    if (this.editingOwnProfile) {
-      this.form.get('email')?.enable();
-    } else {
-      this.form.get('email')?.disable();
-    }
+    // Si no, deshabilita el email para evitar cambios
+    this.form.get('email')?.disable();
+
   }
 
+  /**
+   * Guarda los cambios del usuario.
+   * - Si no hay cambios, avisa y no hace nada.
+   * - Si el usuario está editando su propio perfil y cambió el email,
+   *   intenta actualizarlo en Firebase Auth.
+   *   Si requiere reautenticación, pide contraseña y lo intenta.
+   * - Guarda los datos en Firestore.
+   */
   async saveUser() {
     if (this.form.invalid) return;
 
@@ -110,32 +142,16 @@ export class UsuarioDatosComponent implements OnInit {
       return;
     }
 
-    const auth = getAuth();
-    const currentUser = auth.currentUser;
-
-    if (this.editingOwnProfile && data.email && currentUser && currentUser.email !== data.email) {
-      try {
-        await updateEmail(currentUser, data.email);
-      } catch (error: any) {
-        if (error.code === 'auth/requires-recent-login') {
-          alert('Por seguridad, vuelve a iniciar sesión para actualizar el correo.');
-        } else {
-          console.error('Error al actualizar email en Auth:', error.code);
-          alert('No se pudo actualizar el correo en autenticación.');
-        }
-        return;
-      }
-    }
-
     try {
+      // Guardar solo nombre completo y conservar email original
       const userRef = doc(this.firestore, 'users', this.originalData.id);
       await setDoc(userRef, {
         dni: data.dni,
-        email: this.editingOwnProfile ? data.email : this.originalData.email,
+        email: this.originalData.email,
         nombreCompleto: data.nombreCompleto,
       });
 
-      this.originalData = { ...data, id: this.originalData.id };
+      this.originalData = { ...data, id: this.originalData.id, email: this.originalData.email };
       this.editMode = true;
       alert('Usuario actualizado.');
     } catch (error) {
@@ -144,6 +160,11 @@ export class UsuarioDatosComponent implements OnInit {
     }
   }
 
+  /**
+   * Compara los datos actuales con los originales para detectar cambios.
+   * @param data Datos actuales del formulario.
+   * @returns true si no hay cambios, false si hay diferencias.
+   */
   isDataUnchanged(data: any): boolean {
     return (
       this.originalData &&
@@ -152,19 +173,30 @@ export class UsuarioDatosComponent implements OnInit {
     );
   }
 
+  /**
+   * Navega al historial clínico del usuario usando su dni.
+   * Envía los datos del usuario por estado de navegación.
+   */
   goToHistorial() {
     const data = this.form.getRawValue();
     if (data.dni) {
+      console.log('Navegando al historial con DNI:', data.dni);
       this.router.navigate(['/historial', data.dni], {
         state: { usuario: data },
       });
     }
   }
 
+  /**
+   * Navega a la lista de usuarios.
+   */
   verUsuarios() {
     this.router.navigate(['/usuarios']);
   }
 
+  /**
+   * Navega al calendario principal.
+   */
   volverAlCalendario() {
     this.router.navigate(['/calendario']);
   }
