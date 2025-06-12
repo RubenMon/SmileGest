@@ -65,29 +65,26 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
   private subs = new Subscription();
 
   constructor(
-    public dialogRef: MatDialogRef<ModalUserEventsComponent>,
-    private fb: FormBuilder,
-    private authService: AuthService,
-    @Inject(MAT_DIALOG_DATA) public data: Events
-  ) {
-    // Inicializa el formulario con validaciones básicas
-    this.form = this.fb.group({
-      // Nombre evento requerido, max 10 caracteres
-      nombreEvento: ['', [Validators.required, Validators.pattern(/^.{1,10}$/)]],
-      // Especialidad requerida
-      especialidad: ['', Validators.required],
-      // ID generado aleatoriamente
-      id: [crypto.randomUUID(), Validators.required],
-      // Fecha inicial (hoy)
-      date: [new Date(), Validators.required],
-      // Hora requerida
-      hora: ['', Validators.required],
-      // Color de fondo por defecto
-      background: ['#ffffff'],
-      // Color de texto por defecto
-      color: ['#000000'],
-    });
-  }
+  public dialogRef: MatDialogRef<ModalUserEventsComponent>,
+  private fb: FormBuilder,
+  private authService: AuthService,
+  @Inject(MAT_DIALOG_DATA) public data?: Events
+) {
+  const initDate = data ? new Date(data.date) : new Date();
+  const initHora = data
+    ? initDate.getHours().toString().padStart(2,'0') + ':' + initDate.getMinutes().toString().padStart(2,'0')
+    : '';
+
+  this.form = this.fb.group({
+    nombreEvento: [data?.name || '', [Validators.required, Validators.pattern(/^.{1,10}$/)]],
+    especialidad: [data?.type || '', Validators.required],
+    id: [data?.id || crypto.randomUUID(), Validators.required],
+    date: [initDate, Validators.required],
+    hora: [initHora, Validators.required],
+    background: [data?.background || '#ffffff'],
+    color: [data?.color || '#000000'],
+  });
+}
 
   async ngOnInit(): Promise<void> {
     // Carga datos del usuario actual para asignar al evento

@@ -9,5 +9,5 @@ import { RouterOutlet } from '@angular/router';
 })
 export class AppComponent {
   // Propiedad que almacena el título de la aplicación (puede usarse en la plantilla)
-  title = 'odontogest';
+  title = 'SmileGest';
 }
