@@ -68,11 +68,7 @@ export class HistorialUsuarioComponent implements OnInit {
     this.form = this.fb.group({
       descripcion: ['', Validators.required],
       imagenBase64: [null],
-    });
-
-    if (!this.isAdmin) {
-      this.form.get('descripcion')?.disable();
-    }
+    })
   }
 
   /**
