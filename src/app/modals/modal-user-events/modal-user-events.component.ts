@@ -72,7 +72,7 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
 ) {
   const initDate = data ? new Date(data.date) : new Date();
   const initHora = data
-    ? initDate.getHours().toString().padStart(2,'0') + ':' + initDate.getMinutes().toString().padStart(2,'0')
+    ? initDate.getHours().toString().padStart(2, '0') + ':00'
     : '';
 
   this.form = this.fb.group({
@@ -174,14 +174,19 @@ export class ModalUserEventsComponent implements OnInit, OnDestroy {
     const date: Date = this.form.get('date')!.value;
     const dayStr = date.toDateString();
 
-    // Obtiene las horas ocupadas ese día
+    // Hora original del evento (si se está editando uno)
+    const horaActual = this.data
+      ? new Date(this.data.date).getHours().toString().padStart(2, '0') + ':00'
+      : null;
+
     const occupied = this.allEvents
-      .filter(ev => ev.date.toDateString() === dayStr)
+      .filter(ev => ev.date.toDateString() === dayStr && ev.id !== this.data?.id) // ⚠ excluye el evento actual
       .map(ev => ev.date.getHours().toString().padStart(2, '0') + ':00');
 
-    // Filtra las horas base para eliminar las ocupadas
-    this.availableHours = this.baseHours().filter(h => !occupied.includes(h));
+    // Muestra todas las horas base menos las ocupadas, pero incluye la hora actual si aplica
+    this.availableHours = this.baseHours().filter(h => !occupied.includes(h) || h === horaActual);
   }
+
 
   /**
    * Guarda el evento, cerrando el modal y enviando los datos
